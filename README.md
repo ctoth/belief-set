@@ -10,7 +10,7 @@ belief_set/
 tests/
 ```
 
-It does not know about propstore claims, sources, contexts, sidecars,
+It does not know about caller-owned claims, sources, contexts, sidecars,
 repositories, provenance graphs, worldlines, or CLI policy.
 
 ## Paper Assets
