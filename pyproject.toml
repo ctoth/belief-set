@@ -1,0 +1,30 @@
+[project]
+name = "formal-belief-set"
+version = "0.1.0"
+description = "Finite formal belief-set and belief-revision kernels"
+requires-python = ">=3.11"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["belief_set"]
+
+[tool.pyright]
+typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+markers = [
+    "property: property-based or metamorphic tests",
+]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.0",
+    "pyright>=1.1",
+    "pytest>=8.0",
+]
