@@ -1,3 +1,27 @@
-"""Finite formal belief-set and belief-revision kernels."""
+from belief_set.core import BeliefSet, expand, theory_subset
+from belief_set.language import (
+    BOTTOM,
+    TOP,
+    Atom,
+    Formula,
+    World,
+    conjunction,
+    disjunction,
+    equivalent,
+    negate,
+)
 
-__all__: list[str] = []
+__all__ = [
+    "BOTTOM",
+    "TOP",
+    "Atom",
+    "BeliefSet",
+    "Formula",
+    "World",
+    "conjunction",
+    "disjunction",
+    "equivalent",
+    "expand",
+    "negate",
+    "theory_subset",
+]
