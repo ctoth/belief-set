@@ -140,21 +140,23 @@ def full_meet_contract(
     formula: Formula,
 ) -> RevisionOutcome:
     """AGM contraction using the Harper identity over the finite theory."""
-    if not state.belief_set.entails(formula):
+    signature = state.alphabet | formula.atoms()
+    working_state = extend_state(state, signature)
+    if not working_state.belief_set.entails(formula):
         return RevisionOutcome(
-            belief_set=state.belief_set,
-            state=state,
+            belief_set=working_state.belief_set,
+            state=working_state,
             trace=revision_trace("contract", state.belief_set),
         )
-    revised_by_negation = revise(state, negate(formula))
-    contracted = state.belief_set.intersection_theory(revised_by_negation.belief_set)
+    revised_by_negation = revise(working_state, negate(formula))
+    contracted = working_state.belief_set.intersection_theory(revised_by_negation.belief_set)
     contracted_ranks = {
-        world: min(state.ranks[world], revised_by_negation.state.ranks[world])
-        for world in BeliefSet.all_worlds(state.alphabet)
+        world: min(working_state.ranks[world], revised_by_negation.state.ranks[world])
+        for world in BeliefSet.all_worlds(signature)
     }
     return RevisionOutcome(
         belief_set=contracted,
-        state=SpohnEpistemicState.from_ranks(state.alphabet, contracted_ranks),
+        state=SpohnEpistemicState.from_ranks(signature, contracted_ranks),
         trace=revision_trace("contract", state.belief_set),
     )
 
