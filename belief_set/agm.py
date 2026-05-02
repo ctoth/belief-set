@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from types import MappingProxyType
 
+from belief_set.anytime import enforce_alphabet_budget
 from belief_set.core import BeliefSet
 from belief_set.language import Formula, World, negate
-from belief_set.anytime import EnumerationExceeded
 
 
 MAX_ALPHABET_SIZE = 16
@@ -108,7 +108,7 @@ def revise(
 ) -> RevisionOutcome:
     """Darwiche-Pearl 1997 bullet revision over a Spohn ranking."""
     signature = state.alphabet | formula.atoms()
-    _raise_if_alphabet_exceeds_budget(signature, max_alphabet_size)
+    enforce_alphabet_budget(signature, max_alphabet_size)
     working_state = extend_state(state, signature)
     worlds = BeliefSet.all_worlds(signature)
     satisfying = tuple(world for world in worlds if formula.evaluate(world))
@@ -142,9 +142,12 @@ def revise(
 def full_meet_contract(
     state: SpohnEpistemicState,
     formula: Formula,
+    *,
+    max_alphabet_size: int = MAX_ALPHABET_SIZE,
 ) -> RevisionOutcome:
     """AGM contraction using the Harper identity over the finite theory."""
     signature = state.alphabet | formula.atoms()
+    enforce_alphabet_budget(signature, max_alphabet_size)
     working_state = extend_state(state, signature)
     if not working_state.belief_set.entails(formula):
         return RevisionOutcome(
@@ -152,7 +155,11 @@ def full_meet_contract(
             state=working_state,
             trace=revision_trace("contract", state.belief_set),
         )
-    revised_by_negation = revise(working_state, negate(formula))
+    revised_by_negation = revise(
+        working_state,
+        negate(formula),
+        max_alphabet_size=max_alphabet_size,
+    )
     contracted = working_state.belief_set.intersection_theory(revised_by_negation.belief_set)
     contracted_ranks = {
         world: min(working_state.ranks[world], revised_by_negation.state.ranks[world])
@@ -197,19 +204,6 @@ def _raise_for_invalid_ranks(ranks: Mapping[World, int | float]) -> None:
 
 def _all_ranks_infinite(state: SpohnEpistemicState) -> bool:
     return all(math.isinf(float(rank)) for rank in state.ranks.values())
-
-
-def _raise_if_alphabet_exceeds_budget(
-    signature: frozenset[str],
-    max_alphabet_size: int,
-) -> None:
-    if max_alphabet_size < 0:
-        raise ValueError("max_alphabet_size must be non-negative")
-    if len(signature) > max_alphabet_size:
-        raise EnumerationExceeded(
-            partial_count=0,
-            max_candidates=2 ** max_alphabet_size,
-        )
 
 
 def _trace_timestamp() -> datetime:
