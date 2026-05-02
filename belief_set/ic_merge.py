@@ -6,9 +6,10 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import overload
 
+from belief_set.agm import MAX_ALPHABET_SIZE
+from belief_set.anytime import EnumerationExceeded, enforce_alphabet_budget
 from belief_set.core import BeliefSet
 from belief_set.language import Formula, World
-from belief_set.anytime import EnumerationExceeded
 
 
 class ICMergeOperator(StrEnum):
@@ -53,11 +54,13 @@ def merge_belief_profile(
     mu: Formula,
     *,
     operator: ICMergeOperator = ICMergeOperator.SIGMA,
+    max_alphabet_size: int = MAX_ALPHABET_SIZE,
 ) -> ICMergeOutcome:
     """Konieczny-Pino Pérez style finite model-theoretic IC merge."""
     signature = frozenset(alphabet) | mu.atoms()
     for formula in profile:
         signature |= formula.atoms()
+    enforce_alphabet_budget(signature, max_alphabet_size)
     _raise_for_unsatisfiable_profile_members(profile, signature)
     candidates = tuple(
         world
