@@ -3,10 +3,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from belief_set.agm import (
+    MAX_ALPHABET_SIZE,
     RevisionOutcome,
     SpohnEpistemicState,
     revision_trace,
 )
+from belief_set.anytime import enforce_alphabet_budget
 from belief_set.core import BeliefSet
 from belief_set.language import Formula, World
 
@@ -14,9 +16,12 @@ from belief_set.language import Formula, World
 def lexicographic_revise(
     state: SpohnEpistemicState,
     formula: Formula,
+    *,
+    max_alphabet_size: int = MAX_ALPHABET_SIZE,
 ) -> RevisionOutcome:
     """Nayak-Spohn lexicographic revision over a world preorder."""
     signature = state.alphabet | formula.atoms()
+    enforce_alphabet_budget(signature, max_alphabet_size)
     working = _extend_state(state, signature)
     worlds = tuple(BeliefSet.all_worlds(signature))
     if not any(formula.evaluate(world) for world in worlds):
@@ -43,6 +48,8 @@ def lexicographic_revise(
 def restrained_revise(
     state: SpohnEpistemicState,
     formula: Formula,
+    *,
+    max_alphabet_size: int = MAX_ALPHABET_SIZE,
 ) -> RevisionOutcome:
     """Booth-Meyer restrained revision over a world preorder.
 
@@ -51,6 +58,7 @@ def restrained_revise(
     same-rank alpha/not-alpha ties split in favor of alpha-worlds.
     """
     signature = state.alphabet | formula.atoms()
+    enforce_alphabet_budget(signature, max_alphabet_size)
     working = _extend_state(state, signature)
     worlds = tuple(BeliefSet.all_worlds(signature))
     satisfying = tuple(world for world in worlds if formula.evaluate(world))
