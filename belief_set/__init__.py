@@ -1,5 +1,13 @@
 from belief_set.agm import RevisionOutcome, RevisionTrace, SpohnEpistemicState, full_meet_contract, revise
+from belief_set.anytime import AlphabetBudgetExceeded, EnumerationExceeded
 from belief_set.core import BeliefSet, expand, theory_subset
+from belief_set.entrenchment import EpistemicEntrenchment
+from belief_set.ic_merge import (
+    ICMergeOperator,
+    ICMergeOutcome,
+    ICMergeProfileMemberInconsistent,
+    merge_belief_profile,
+)
 from belief_set.iterated import lexicographic_revise, restrained_revise
 from belief_set.language import (
     BOTTOM,
@@ -14,11 +22,17 @@ from belief_set.language import (
 )
 
 __all__ = [
+    "AlphabetBudgetExceeded",
     "BOTTOM",
     "TOP",
     "Atom",
     "BeliefSet",
+    "EnumerationExceeded",
+    "EpistemicEntrenchment",
     "Formula",
+    "ICMergeOperator",
+    "ICMergeOutcome",
+    "ICMergeProfileMemberInconsistent",
     "RevisionOutcome",
     "RevisionTrace",
     "SpohnEpistemicState",
@@ -29,6 +43,7 @@ __all__ = [
     "expand",
     "full_meet_contract",
     "lexicographic_revise",
+    "merge_belief_profile",
     "negate",
     "restrained_revise",
     "revise",
