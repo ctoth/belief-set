@@ -30,7 +30,7 @@ class ICMergeProfileMemberInconsistent(ValueError):
 @dataclass(frozen=True, slots=True)
 class ICMergeOutcome:
     belief_set: BeliefSet
-    scored_worlds: tuple[tuple[World, float | tuple[float, ...]], ...]
+    scored_worlds: tuple[tuple[World, tuple[float, ...]], ...]
 
 
 @dataclass(slots=True)
@@ -83,10 +83,10 @@ def _score_world(
     world: World,
     distance_entries: tuple[_DistanceFormulaEntry, ...],
     operator: ICMergeOperator,
-) -> float | tuple[float, ...]:
+) -> tuple[float, ...]:
     distances = tuple(_distance_from_entry(world, entry) for entry in distance_entries)
     if operator == ICMergeOperator.SIGMA:
-        return float(sum(distances))
+        return (float(sum(distances)),)
     if operator == ICMergeOperator.GMAX:
         return tuple(sorted(distances, reverse=True))
     raise ValueError(f"Unsupported IC merge operator: {operator}")
@@ -224,7 +224,5 @@ def _hamming(left: World, right: World) -> int:
     return len(left.symmetric_difference(right))
 
 
-def _score_key(score: float | tuple[float, ...]) -> tuple[float, ...]:
-    if isinstance(score, tuple):
-        return tuple(float(item) for item in score)
-    return (score,)
+def _score_key(score: tuple[float, ...]) -> tuple[float, ...]:
+    return tuple(float(item) for item in score)
