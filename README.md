@@ -28,14 +28,16 @@ Use an immutable pushed commit or tag. Do not pin consumers to a local checkout.
 from belief_set import (
     Atom,
     BeliefSet,
+    EpistemicEntrenchment,
+    ICMergeOperator,
     SpohnEpistemicState,
     conjunction,
     full_meet_contract,
     lexicographic_revise,
+    merge_belief_profile,
     restrained_revise,
     revise,
 )
-from belief_set.ic_merge import ICMergeOperator, merge_belief_profile
 ```
 
 ## Formula And Belief-Set Examples
@@ -89,8 +91,7 @@ return the same `RevisionOutcome` shape as AGM revision.
 ## IC Merge
 
 ```python
-from belief_set import Atom, BOTTOM, conjunction
-from belief_set.ic_merge import ICMergeOperator, merge_belief_profile
+from belief_set import Atom, BOTTOM, ICMergeOperator, conjunction, merge_belief_profile
 
 p = Atom("p")
 q = Atom("q")
