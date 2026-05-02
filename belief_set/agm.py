@@ -4,6 +4,7 @@ import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from types import MappingProxyType
 
 from belief_set.core import BeliefSet
 from belief_set.language import Formula, World, negate
@@ -32,32 +33,35 @@ class SpohnEpistemicState:
     """Finite ordinal conditional function over propositional worlds."""
 
     alphabet: frozenset[str]
-    ranks: dict[World, int | float]
+    ranks: Mapping[World, int | float]
 
     def __post_init__(self) -> None:
         signature = frozenset(self.alphabet)
         worlds = BeliefSet.all_worlds(signature)
-        if set(self.ranks) != set(worlds):
+        input_ranks = {frozenset(world): rank for world, rank in self.ranks.items()}
+        if set(input_ranks) != set(worlds):
             raise ValueError("SpohnEpistemicState ranks must cover every world in the alphabet")
-        if all(math.isinf(float(rank)) for rank in self.ranks.values()):
-            normalized_ranks = {frozenset(world): math.inf for world in self.ranks}
-            object.__setattr__(self, "ranks", normalized_ranks)
+        _raise_for_invalid_ranks(input_ranks)
+        if all(math.isinf(float(rank)) for rank in input_ranks.values()):
+            normalized_ranks = {world: math.inf for world in input_ranks}
+            object.__setattr__(self, "ranks", MappingProxyType(normalized_ranks))
             object.__setattr__(self, "alphabet", signature)
             return
 
         finite_ranks = [
             float(rank)
-            for rank in self.ranks.values()
+            for rank in input_ranks.values()
             if not math.isinf(float(rank))
         ]
         min_rank = min(finite_ranks, default=0.0)
+        normalized_ranks = {
+            world: _normalize_rank(rank, min_rank)
+            for world, rank in input_ranks.items()
+        }
         object.__setattr__(
             self,
             "ranks",
-            {
-                frozenset(world): _normalize_rank(rank, min_rank)
-                for world, rank in self.ranks.items()
-            },
+            MappingProxyType(normalized_ranks),
         )
         object.__setattr__(self, "alphabet", signature)
 
@@ -180,6 +184,15 @@ def _normalize_rank(rank: int | float, min_rank: float) -> int | float:
     if normalized.is_integer():
         return int(normalized)
     return normalized
+
+
+def _raise_for_invalid_ranks(ranks: Mapping[World, int | float]) -> None:
+    for rank in ranks.values():
+        rank_value = float(rank)
+        if math.isnan(rank_value):
+            raise ValueError("SpohnEpistemicState ranks must not be NaN")
+        if rank_value < 0:
+            raise ValueError("SpohnEpistemicState ranks must be non-negative")
 
 
 def _all_ranks_infinite(state: SpohnEpistemicState) -> bool:
