@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from belief_set import Atom, BeliefSet, SpohnEpistemicState, conjunction, revise
-from belief_set.anytime import EnumerationExceeded
+from belief_set.anytime import AlphabetBudgetExceeded
 
 
 def test_revise_rejects_signature_larger_than_configured_alphabet_budget() -> None:
@@ -12,7 +12,7 @@ def test_revise_rejects_signature_larger_than_configured_alphabet_budget() -> No
     state = SpohnEpistemicState.from_belief_set(BeliefSet.tautology(frozenset({"p", "q"})))
     formula = conjunction(Atom("p"), Atom("q"), Atom("r"))
 
-    with pytest.raises(EnumerationExceeded):
+    with pytest.raises(AlphabetBudgetExceeded):
         revise(state, formula, max_alphabet_size=2)
 
 
@@ -23,5 +23,5 @@ def test_revise_default_budget_rejects_twenty_one_atom_signature() -> None:
     state = SpohnEpistemicState.from_belief_set(BeliefSet.tautology(base))
     formula = conjunction(*(Atom(f"x{index}") for index in range(18)))
 
-    with pytest.raises(EnumerationExceeded):
+    with pytest.raises(AlphabetBudgetExceeded):
         revise(state, formula)
