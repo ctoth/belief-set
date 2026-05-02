@@ -71,11 +71,17 @@ class SpohnEpistemicState:
 
     @classmethod
     def from_belief_set(cls, belief_set: BeliefSet) -> SpohnEpistemicState:
+        worlds = BeliefSet.all_worlds(belief_set.alphabet)
+        if not belief_set.models:
+            return cls(
+                alphabet=belief_set.alphabet,
+                ranks={world: math.inf for world in worlds},
+            )
         return cls(
             alphabet=belief_set.alphabet,
             ranks={
                 world: 0 if world in belief_set.models else 1
-                for world in BeliefSet.all_worlds(belief_set.alphabet)
+                for world in worlds
             },
         )
 
@@ -102,7 +108,12 @@ def revise(
     working_state = extend_state(state, signature)
     worlds = BeliefSet.all_worlds(signature)
     satisfying = tuple(world for world in worlds if formula.evaluate(world))
-    if not satisfying:
+    if _all_ranks_infinite(working_state):
+        result_state = SpohnEpistemicState.from_ranks(
+            signature,
+            {world: math.inf for world in worlds},
+        )
+    elif not satisfying:
         result_state = SpohnEpistemicState.from_ranks(
             signature,
             {world: math.inf for world in worlds},
@@ -167,6 +178,10 @@ def _normalize_rank(rank: int | float, min_rank: float) -> int | float:
     if normalized.is_integer():
         return int(normalized)
     return normalized
+
+
+def _all_ranks_infinite(state: SpohnEpistemicState) -> bool:
+    return all(math.isinf(float(rank)) for rank in state.ranks.values())
 
 
 def _raise_if_alphabet_exceeds_budget(
