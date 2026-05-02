@@ -9,10 +9,14 @@ class EnumerationExceeded(Exception):
     max_candidates: int
 
 
-@dataclass(frozen=True, slots=True)
 class AlphabetBudgetExceeded(ValueError):
-    alphabet_size: int
-    max_alphabet_size: int
+    def __init__(self, *, alphabet_size: int, max_alphabet_size: int) -> None:
+        self.alphabet_size = alphabet_size
+        self.max_alphabet_size = max_alphabet_size
+        super().__init__(
+            "alphabet size "
+            f"{alphabet_size} exceeds maximum alphabet size {max_alphabet_size}",
+        )
 
 
 def enforce_alphabet_budget(
