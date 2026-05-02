@@ -134,5 +134,12 @@ def disjunction(*formulas: Formula) -> Formula:
 def equivalent(left: Formula, right: Formula, *, alphabet: frozenset[str] | None = None) -> bool:
     from belief_set.core import BeliefSet
 
-    signature = frozenset(alphabet or (left.atoms() | right.atoms()))
-    return BeliefSet.from_formula(signature, left).models == BeliefSet.from_formula(signature, right).models
+    signature = (
+        frozenset(alphabet)
+        if alphabet is not None
+        else left.atoms() | right.atoms()
+    )
+    return all(
+        left.evaluate(world) is right.evaluate(world)
+        for world in BeliefSet.all_worlds(signature)
+    )
