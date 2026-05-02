@@ -124,14 +124,19 @@ def revise(
         )
     else:
         min_formula_rank = min(working_state.ranks[world] for world in satisfying)
-        revised_ranks: dict[World, int | float] = {}
-        for world in worlds:
-            current_rank = working_state.ranks[world]
-            if formula.evaluate(world):
-                revised_ranks[world] = current_rank - min_formula_rank
-            else:
-                revised_ranks[world] = current_rank + 1
-        result_state = SpohnEpistemicState.from_ranks(signature, revised_ranks)
+        if math.isinf(float(min_formula_rank)):
+            result_state = SpohnEpistemicState.from_belief_set(
+                BeliefSet(signature, frozenset(satisfying)),
+            )
+        else:
+            revised_ranks: dict[World, int | float] = {}
+            for world in worlds:
+                current_rank = working_state.ranks[world]
+                if formula.evaluate(world):
+                    revised_ranks[world] = current_rank - min_formula_rank
+                else:
+                    revised_ranks[world] = current_rank + 1
+            result_state = SpohnEpistemicState.from_ranks(signature, revised_ranks)
     return RevisionOutcome(
         belief_set=result_state.belief_set,
         state=result_state,
