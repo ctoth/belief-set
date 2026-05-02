@@ -6,6 +6,7 @@ from belief_set.agm import (
     MAX_ALPHABET_SIZE,
     RevisionOutcome,
     SpohnEpistemicState,
+    extend_state,
     revision_trace,
 )
 from belief_set.anytime import enforce_alphabet_budget
@@ -22,7 +23,7 @@ def lexicographic_revise(
     """Nayak-Spohn lexicographic revision over a world preorder."""
     signature = state.alphabet | formula.atoms()
     enforce_alphabet_budget(signature, max_alphabet_size)
-    working = _extend_state(state, signature)
+    working = extend_state(state, signature)
     worlds = tuple(BeliefSet.all_worlds(signature))
     if not any(formula.evaluate(world) for world in worlds):
         return RevisionOutcome(
@@ -59,7 +60,7 @@ def restrained_revise(
     """
     signature = state.alphabet | formula.atoms()
     enforce_alphabet_budget(signature, max_alphabet_size)
-    working = _extend_state(state, signature)
+    working = extend_state(state, signature)
     worlds = tuple(BeliefSet.all_worlds(signature))
     satisfying = tuple(world for world in worlds if formula.evaluate(world))
     if not satisfying:
@@ -98,13 +99,3 @@ def _dense_ranks(keys: Mapping[World, tuple[int | float, ...]]) -> dict[World, i
     }
     return {world: ordered_keys[key] for world, key in keys.items()}
 
-
-def _extend_state(state: SpohnEpistemicState, alphabet: frozenset[str]) -> SpohnEpistemicState:
-    if alphabet == state.alphabet:
-        return state
-    extras = tuple(sorted(alphabet - state.alphabet))
-    ranks: dict[World, int | float] = {}
-    for world, rank in state.ranks.items():
-        for extension in BeliefSet.all_worlds(frozenset(extras)):
-            ranks[frozenset(set(world) | set(extension))] = rank
-    return SpohnEpistemicState.from_ranks(alphabet, ranks)
