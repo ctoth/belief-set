@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from belief_set import Atom, SpohnEpistemicState, full_meet_contract, revise
+from belief_set import Atom, BeliefSet, SpohnEpistemicState, disjunction, full_meet_contract, negate, revise
 
 
 def test_full_meet_contraction_preserves_spohn_ranking_information() -> None:
@@ -100,3 +100,22 @@ def test_full_meet_contraction_preserves_spohn_ranking_information() -> None:
         p_q: 0,
     }
     assert revised_a.ranks != revised_b.ranks
+
+
+def test_full_meet_contraction_aligns_state_with_extended_harper_signature() -> None:
+    p = Atom("p")
+    r = Atom("r")
+    state = SpohnEpistemicState.from_belief_set(
+        BeliefSet.from_formula(frozenset({"p"}), p),
+    )
+    tautology_over_new_atom = disjunction(r, negate(r))
+
+    result = full_meet_contract(state, tautology_over_new_atom)
+    harper = state.belief_set.intersection_theory(
+        revise(state, negate(tautology_over_new_atom)).belief_set,
+    )
+
+    assert result.belief_set == harper
+    assert result.state.belief_set == harper
+    assert result.state.alphabet == harper.alphabet
+    assert result.belief_set.alphabet == result.state.alphabet
