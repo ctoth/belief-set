@@ -56,6 +56,11 @@ class BeliefSet:
         )
 
     def cn(self) -> BeliefSet:
+        """Return the extensional closure of this finite theory.
+
+        The representation already stores the complete set of models over the
+        declared alphabet, so closure is the object itself.
+        """
         return self
 
     def equivalent(self, other: BeliefSet) -> bool:
