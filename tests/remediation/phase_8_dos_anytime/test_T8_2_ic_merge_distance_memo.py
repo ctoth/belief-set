@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from belief_set import TOP
 from belief_set.core import BeliefSet
+from belief_set.ic_merge import merge_belief_profile
 from belief_set.language import World
-from belief_set.ic_merge import _distance_to_formula
 
 
 class CountingConjunctionFormula:
@@ -18,19 +19,16 @@ class CountingConjunctionFormula:
         return self._atoms
 
 
-def test_distance_to_formula_memo_reduces_repeated_six_var_scan_by_10x() -> None:
+def test_merge_distance_oracle_scans_each_profile_formula_once_per_call() -> None:
     signature = frozenset({"a", "b", "c", "d", "e", "f"})
     worlds = tuple(BeliefSet.all_worlds(signature))
     formula = CountingConjunctionFormula(signature)
 
-    for world in worlds:
-        _distance_to_formula(world, formula, signature)
+    merge_belief_profile(signature, (formula,), TOP)
 
-    uncached_evaluation_budget = len(worlds) * len(worlds)
-    assert formula.evaluations * 10 <= uncached_evaluation_budget
+    assert formula.evaluations == len(worlds)
 
     after_first_pass = formula.evaluations
-    for world in worlds:
-        _distance_to_formula(world, formula, signature)
+    merge_belief_profile(signature, (formula,), TOP)
 
-    assert formula.evaluations == after_first_pass
+    assert formula.evaluations == after_first_pass + len(worlds)
