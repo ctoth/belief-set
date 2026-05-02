@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-from collections import OrderedDict
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import overload
@@ -35,17 +34,10 @@ class ICMergeOutcome:
 
 
 @dataclass(slots=True)
-class _DistanceFormulaCacheEntry:
+class _DistanceFormulaEntry:
     formula: Formula
     models: tuple[World, ...]
     distances: dict[World, float]
-
-
-_DISTANCE_FORMULA_CACHE_MAX_SIZE = 128
-_DISTANCE_FORMULA_CACHE: OrderedDict[
-    tuple[object, frozenset[str]],
-    _DistanceFormulaCacheEntry,
-] = OrderedDict()
 
 
 def merge_belief_profile(
@@ -61,7 +53,8 @@ def merge_belief_profile(
     for formula in profile:
         signature |= formula.atoms()
     enforce_alphabet_budget(signature, max_alphabet_size)
-    _raise_for_unsatisfiable_profile_members(profile, signature)
+    distance_entries = _distance_entries(profile, signature)
+    _raise_for_unsatisfiable_profile_members(distance_entries)
     candidates = tuple(
         world
         for world in BeliefSet.all_worlds(signature)
@@ -74,7 +67,7 @@ def merge_belief_profile(
         )
     scored = tuple(
         sorted(
-            ((world, _score_world(world, profile, signature, operator)) for world in candidates),
+            ((world, _score_world(world, distance_entries, operator)) for world in candidates),
             key=lambda item: (_score_key(item[1]), tuple(sorted(item[0]))),
         )
     )
@@ -88,11 +81,10 @@ def merge_belief_profile(
 
 def _score_world(
     world: World,
-    profile: tuple[Formula, ...],
-    signature: frozenset[str],
+    distance_entries: tuple[_DistanceFormulaEntry, ...],
     operator: ICMergeOperator,
 ) -> float | tuple[float, ...]:
-    distances = tuple(_distance_to_formula(world, formula, signature) for formula in profile)
+    distances = tuple(_distance_from_entry(world, entry) for entry in distance_entries)
     if operator == ICMergeOperator.SIGMA:
         return float(sum(distances))
     if operator == ICMergeOperator.GMAX:
@@ -144,18 +136,13 @@ def _distance_to_formula(
 
     if max_candidates is not None and max_candidates < 0:
         raise ValueError("max_candidates must be non-negative")
+    _raise_if_formula_atoms_outside_signature(formula, signature)
 
     if max_candidates is None:
-        entry = _distance_formula_cache_entry(formula, signature)
-        cached_distance = entry.distances.get(world)
-        if cached_distance is not None:
-            return cached_distance
-        if not entry.models:
-            entry.distances[world] = math.inf
+        models = _models_for_formula(formula, signature)
+        if not models:
             return math.inf
-        distance = float(min(_hamming(world, model) for model in entry.models))
-        entry.distances[world] = distance
-        return distance
+        return float(min(_hamming(world, model) for model in models))
 
     best_distance: int | None = None
     examined = 0
@@ -178,40 +165,59 @@ def _distance_to_formula(
     return float(best_distance)
 
 
-def _distance_formula_cache_entry(
+def _distance_entries(
+    profile: tuple[Formula, ...],
+    signature: frozenset[str],
+) -> tuple[_DistanceFormulaEntry, ...]:
+    return tuple(
+        _DistanceFormulaEntry(
+            formula=formula,
+            models=_models_for_formula(formula, signature),
+            distances={},
+        )
+        for formula in profile
+    )
+
+
+def _models_for_formula(
     formula: Formula,
     signature: frozenset[str],
-) -> _DistanceFormulaCacheEntry:
-    key = (formula, signature)
-    cached = _DISTANCE_FORMULA_CACHE.get(key)
-    if cached is not None:
-        _DISTANCE_FORMULA_CACHE.move_to_end(key)
-        return cached
-
-    models = tuple(
+) -> tuple[World, ...]:
+    _raise_if_formula_atoms_outside_signature(formula, signature)
+    return tuple(
         candidate
         for candidate in BeliefSet.all_worlds(signature)
         if formula.evaluate(candidate)
     )
-    entry = _DistanceFormulaCacheEntry(
-        formula=formula,
-        models=models,
-        distances={},
-    )
-    _DISTANCE_FORMULA_CACHE[key] = entry
-    _DISTANCE_FORMULA_CACHE.move_to_end(key)
-    while len(_DISTANCE_FORMULA_CACHE) > _DISTANCE_FORMULA_CACHE_MAX_SIZE:
-        _DISTANCE_FORMULA_CACHE.popitem(last=False)
-    return entry
+
+
+def _distance_from_entry(world: World, entry: _DistanceFormulaEntry) -> float:
+    cached_distance = entry.distances.get(world)
+    if cached_distance is not None:
+        return cached_distance
+    if not entry.models:
+        entry.distances[world] = math.inf
+        return math.inf
+    distance = float(min(_hamming(world, model) for model in entry.models))
+    entry.distances[world] = distance
+    return distance
 
 
 def _raise_for_unsatisfiable_profile_members(
-    profile: tuple[Formula, ...],
+    distance_entries: tuple[_DistanceFormulaEntry, ...],
+) -> None:
+    for entry in distance_entries:
+        if not entry.models:
+            raise ICMergeProfileMemberInconsistent(entry.formula)
+
+
+def _raise_if_formula_atoms_outside_signature(
+    formula: Formula,
     signature: frozenset[str],
 ) -> None:
-    for formula in profile:
-        if not _distance_formula_cache_entry(formula, signature).models:
-            raise ICMergeProfileMemberInconsistent(formula)
+    extra_atoms = formula.atoms() - signature
+    if extra_atoms:
+        raise ValueError("formula atoms outside signature")
 
 
 def _hamming(left: World, right: World) -> int:
