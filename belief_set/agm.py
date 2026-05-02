@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from types import MappingProxyType
 
@@ -18,7 +18,7 @@ MAX_ALPHABET_SIZE = 16
 class RevisionTrace:
     operator: str
     pre_image_fingerprint: str
-    timestamp: datetime
+    timestamp: datetime = field(compare=False)
 
 
 @dataclass(frozen=True, slots=True)
