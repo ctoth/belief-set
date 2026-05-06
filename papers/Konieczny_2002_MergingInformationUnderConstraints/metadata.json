@@ -5,7 +5,6 @@
     "Ramon Pino Perez"
   ],
   "year": "2002",
-  "arxiv_id": null,
   "doi": "10.1093/logcom/12.5.773",
   "abstract": "The paper considers the problem of merging several belief bases in the presence of integrity constraints and proposes a logical characterization of operators having a majority behaviour or a consensual one. Then a representation theorem in terms of pre-orders on interpretations is given. The close connection between belief revision and merging operators is shown and it is shown that the proposal extends the pure merging case (i.e. without integrity constraints) studied in a previous work. Finally it is shown that Liberatore and Schaerf commutative revision operators can be seen as a special case of merging.",
   "url": "https://www.semanticscholar.org/paper/97638512bed68bde9aec98a0279ffd25bd77c17c",

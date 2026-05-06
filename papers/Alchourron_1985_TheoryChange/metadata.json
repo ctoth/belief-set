@@ -6,9 +6,12 @@
     "D. Makinson"
   ],
   "year": "1985",
-  "arxiv_id": null,
   "doi": "10.2307/2274239",
-  "abstract": null,
   "url": "https://www.semanticscholar.org/paper/937c576f7b39a53908d8c646983ddd2bda94a321",
-  "pdf_url": ""
+  "pdf_url": "",
+  "bibtex": "@Article{Alchourrón1985OnTL,\n author = {C. E. Alchourrón and P. Gärdenfors and D. Makinson},\n booktitle = {Journal of Symbolic Logic (JSL)},\n journal = {Journal of Symbolic Logic},\n pages = {510 - 530},\n title = {On the logic of theory change: Partial meet contraction and revision functions},\n volume = {50},\n year = {1985}\n}\n",
+  "venue": "Journal of Symbolic Logic (JSL)",
+  "venue_type": "journal",
+  "volume": "50",
+  "pages": "510 - 530"
 }
