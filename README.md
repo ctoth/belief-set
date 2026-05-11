@@ -1,40 +1,95 @@
 # belief_set
 
-`belief_set` is a small pure-Python package for finite propositional belief
-sets and belief-revision kernels. It provides model-theoretic machinery for
-AGM-style revision and contraction, Spohn ranking states, iterated revision,
+`belief_set` is a small pure-Python package for finite propositional
+belief-revision kernels. It provides the model-theoretic pieces needed for
+AGM revision and contraction, Spohn ranking states, iterated revision,
 epistemic entrenchment, and IC belief merging.
 
-This is a finite-world reference implementation. Given an alphabet of `n`
-atoms, operators enumerate up to `2^n` worlds, so the alphabet is the primary
-cost dimension. Public enumeration entrypoints expose a `max_alphabet_size`
-guard and raise `AlphabetBudgetExceeded` when a caller asks for more worlds
-than the configured budget permits.
+The package is intentionally finite-world and explicit. Given an alphabet of
+`n` atoms, many operations enumerate up to `2^n` worlds. Treat alphabet size as
+the main cost driver and pass `max_alphabet_size` when accepting caller-owned
+formulas.
 
-Status: experimental `0.1.0`, Python `>=3.11`, installed from Git commits.
-No license is declared in this repository yet.
+Status: experimental `0.1.0`, Python `>=3.11`, no declared license yet.
 
 ## Install
 
-Install from an immutable pushed commit or tag:
+Install the distribution package from a pushed Git commit or tag:
 
 ```powershell
 uv add "formal-belief-set @ git+https://github.com/ctoth/belief-set@<commit>"
 ```
 
-Do not pin consumers to a local checkout, local path, or editable local
-repository URL.
+Do not pin downstream projects to a local checkout, local path, or editable
+local repository URL.
 
-## Public Surface
+For local development:
+
+```powershell
+uv sync
+uv run pytest
+uv run pyright
+```
+
+## Quick Start
+
+```python
+from belief_set import Atom, BeliefSet, SpohnEpistemicState, conjunction, negate, revise
+
+p = Atom("p")
+q = Atom("q")
+
+initial = BeliefSet.from_formula(
+    frozenset({"p", "q"}),
+    conjunction(p, negate(q)),
+)
+state = SpohnEpistemicState.from_belief_set(initial)
+
+outcome = revise(state, q)
+
+assert outcome.belief_set.entails(q)
+assert outcome.state.belief_set.equivalent(outcome.belief_set)
+assert outcome.trace.operator == "revise"
+```
+
+The central representation is extensional: a `BeliefSet` stores an alphabet
+and the finite set of worlds that satisfy the theory. Its `cn()` method returns
+the object itself because the deductive closure is already represented by those
+models over the declared alphabet.
+
+## Mental Model
+
+- A world is a `frozenset[str]` containing exactly the atoms true in that world.
+- A formula is any object implementing `evaluate(world)` and `atoms()`.
+- `Atom`, `TOP`, `BOTTOM`, `negate`, `conjunction`, and `disjunction` provide a
+  minimal formula language.
+- Belief sets are compared extensionally after their alphabets are aligned.
+- Revision operators return outcomes, not bare belief sets, so callers can keep
+  the revised belief set, revised Spohn state, and trace metadata together.
+- Contradictory belief sets are preserved as contradictions; they are not
+  converted into tautologies.
+
+## Public API
+
+The package root exports the supported public surface:
 
 ```python
 from belief_set import (
     AlphabetBudgetExceeded,
     Atom,
+    BOTTOM,
     BeliefSet,
+    EnumerationExceeded,
     EpistemicEntrenchment,
+    Formula,
     ICMergeOperator,
+    ICMergeOutcome,
+    ICMergeProfileMemberInconsistent,
+    RevisionOutcome,
+    RevisionTrace,
     SpohnEpistemicState,
+    TOP,
+    World,
     conjunction,
     disjunction,
     equivalent,
@@ -51,36 +106,38 @@ from belief_set import (
 
 Module map:
 
-- `language`: formula protocol, atoms, boolean connectives, equivalence checks.
-- `core`: extensional finite belief sets represented by their model worlds.
-- `agm`: Spohn epistemic states, AGM-style revision, Harper contraction traces.
-- `iterated`: lexicographic and restrained iterated revision operators.
-- `entrenchment`: epistemic entrenchment comparisons induced by a Spohn state.
-- `ic_merge`: Konieczny-Pino Perez style sigma and gmax IC merging.
-- `anytime`: bounded enumeration exceptions and alphabet-budget checks.
+- `belief_set.language`: formula protocol, atoms, constants, boolean
+  connectives, and equivalence checks.
+- `belief_set.core`: extensional finite belief sets and model-alignment
+  helpers.
+- `belief_set.agm`: Spohn epistemic states, AGM-style revision, full-meet
+  contraction, and revision traces.
+- `belief_set.iterated`: lexicographic and restrained iterated revision.
+- `belief_set.entrenchment`: entrenchment comparisons induced by a Spohn state.
+- `belief_set.ic_merge`: finite IC merging with sigma and gmax aggregation.
+- `belief_set.anytime`: bounded-enumeration failure types.
 
-## Basic Belief Sets
+## Belief Sets
 
 ```python
-from belief_set import Atom, BeliefSet, conjunction, negate
+from belief_set import Atom, BeliefSet, conjunction, negate, theory_subset
 
 p = Atom("p")
 q = Atom("q")
-alphabet = frozenset({"p", "q"})
+beliefs = BeliefSet.from_formula(frozenset({"p", "q"}), conjunction(p, q))
+weaker = BeliefSet.from_formula(frozenset({"p", "q"}), p)
 
-beliefs = BeliefSet.from_formula(alphabet, conjunction(p, q))
-
+assert beliefs.is_consistent
 assert beliefs.entails(p)
 assert not beliefs.entails(negate(p))
-assert beliefs.cn() is beliefs
+assert theory_subset(beliefs, weaker)
 ```
 
-`BeliefSet` is extensional: it stores a finite alphabet and the worlds that
-model the theory. `cn()` is therefore the identity operation, because the
-object already represents the deductive closure over the declared finite
-alphabet.
+`BeliefSet.from_formula()` automatically extends the declared alphabet with
+any atoms mentioned by the formula. `with_alphabet()` extends an existing
+belief set to a larger signature while preserving its old constraints.
 
-## AGM Revision And Contraction
+## Revision And Contraction
 
 ```python
 from belief_set import Atom, BeliefSet, SpohnEpistemicState, full_meet_contract, revise
@@ -96,10 +153,9 @@ assert revision.belief_set.entails(p)
 assert contraction.belief_set.alphabet == contraction.state.alphabet
 ```
 
-Revision and contraction return `RevisionOutcome` objects containing the
-resulting belief set, resulting Spohn state, and package-local trace metadata.
-Contradictory belief sets are represented by all-infinite Spohn ranks and are
-not silently laundered into tautologies.
+`revise()` implements Darwiche-Pearl bullet revision over a finite Spohn
+ranking. `full_meet_contract()` uses the Harper identity over the finite
+theory. Both return `RevisionOutcome`.
 
 ## Iterated Revision
 
@@ -116,8 +172,10 @@ assert lexicographic.belief_set.entails(p)
 assert restrained.belief_set.entails(p)
 ```
 
-The iterated operators preserve the finite Spohn-ranking representation and
-return the same `RevisionOutcome` shape as AGM revision.
+Lexicographic revision orders all formula worlds before all non-formula worlds
+while preserving the old rank order inside those groups. Restrained revision
+promotes the old minimal formula worlds and then preserves old strict order,
+splitting same-rank ties in favor of formula worlds.
 
 ## Entrenchment
 
@@ -125,13 +183,16 @@ return the same `RevisionOutcome` shape as AGM revision.
 from belief_set import Atom, BeliefSet, EpistemicEntrenchment, SpohnEpistemicState, negate
 
 p = Atom("p")
-state = SpohnEpistemicState.from_belief_set(BeliefSet.from_formula(frozenset({"p"}), p))
+state = SpohnEpistemicState.from_belief_set(
+    BeliefSet.from_formula(frozenset({"p"}), p),
+)
 entrenchment = EpistemicEntrenchment.from_state(state)
 
 assert entrenchment.leq(negate(p), p)
 ```
 
-Entrenchment comparisons are induced by the rank of countermodels in the
+`EpistemicEntrenchment.leq(left, right)` returns whether `left` is no more
+entrenched than `right`, using the minimum rank of countermodels in the
 underlying Spohn state.
 
 ## IC Merge
@@ -150,12 +211,14 @@ outcome = merge_belief_profile(
 )
 
 assert outcome.belief_set.is_consistent
+assert outcome.scored_worlds[0][1] == (0.0,)
 ```
 
-`merge_belief_profile` implements finite model-theoretic IC merging over a
-profile, an integrity constraint, and either sigma or gmax aggregation.
-`ICMergeOutcome.scored_worlds` uses a uniform tuple score representation for
-both operators.
+`merge_belief_profile()` evaluates candidate worlds satisfying the integrity
+constraint `mu`, scores them by distance to the profile, and returns the
+best-scoring worlds as a belief set. `ICMergeOperator.SIGMA` sums distances.
+`ICMergeOperator.GMAX` compares sorted distance vectors lexicographically.
+Unsatisfiable profile members raise `ICMergeProfileMemberInconsistent`.
 
 ## Bounded Enumeration
 
@@ -170,46 +233,51 @@ with pytest.raises(AlphabetBudgetExceeded):
     revise(state, Atom("q"), max_alphabet_size=1)
 ```
 
-`AlphabetBudgetExceeded` is a hard precondition failure for public operators.
-`EnumerationExceeded` is reserved for interrupted anytime-style private
-distance scans.
+Public operators call the alphabet guard before enumerating worlds.
+`AlphabetBudgetExceeded` means the requested signature is larger than the
+configured budget. `EnumerationExceeded` is reserved for interrupted
+anytime-style distance scans and is not used as an approximation result by the
+public merge operator.
 
 ## Correctness Coverage
 
 The test suite contains focused and property-based checks grounded in the
 processed paper notes under `papers/`:
 
-- Spohn OCF invariants: no `NaN` ranks, read-only normalized rank maps,
-  contradiction as all-infinite ranks.
+- Spohn OCF invariants: no `NaN` ranks, read-only normalized rank maps, and
+  contradiction represented by all-infinite ranks.
 - AGM revision and contraction: success, extensionality, Harper contraction,
   and aligned belief-set/state alphabets.
 - Gardenfors-Makinson entrenchment checks over generated small formulas.
-- Booth-Meyer restrained revision and lexicographic iterated revision checks.
+- Booth-Meyer restrained revision and Nayak-Spohn lexicographic revision.
 - Konieczny-Pino Perez IC merging checks, including sigma/gmax behavior,
-  empty-profile semantics, and score-shape normalization.
+  empty-profile semantics, inconsistent profile-member handling, and uniform
+  score shapes.
 
-## Development
+Run the full suite with:
 
 ```powershell
-uv sync
 uv run pytest
-uv run pytest -m property
-uv run pyright
 ```
 
-The property tests intentionally use small alphabets because world enumeration
-is exponential.
+Property tests use small alphabets because world enumeration is exponential:
+
+```powershell
+uv run pytest -m property
+```
 
 ## Non-Goals
 
 This package deliberately does not own:
 
 - caller-owned provenance graphs or witness objects
-- source, context, claim, stance, sidecar, storage, worldline, repository, or
-  CLI behavior
+- source, context, claim, stance, sidecar, storage, worldline, repository, CLI,
+  or presentation behavior
 - argumentation-framework revision adapters
 - compatibility imports for older owner-specific module paths
 - scalable SAT/SMT-backed reasoning
+
+See [docs/architecture.md](docs/architecture.md) for the runtime boundary.
 
 ## Paper Assets
 
