@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import combinations
-from typing import Iterable
+from typing import Callable, Iterable
 
 from belief_set.core import BeliefSet
 from belief_set.language import Formula, conjunction
@@ -65,6 +65,30 @@ class BeliefBase:
             formula
             for formula in self.formulas
             if all(formula in remainder for remainder in remainders)
+        )
+        return BeliefBase(self.alphabet, kept)
+
+    def simple_partial_meet_contract(
+        self,
+        forbidden: Iterable[Formula],
+        selector: Callable[
+            [tuple[tuple[Formula, ...], ...]],
+            Iterable[tuple[Formula, ...]],
+        ],
+    ) -> BeliefBase:
+        """Return Hansson's simple partial meet contraction via gamma."""
+        remainders = self.remainder_sets(forbidden)
+        if not remainders:
+            return BeliefBase(self.alphabet, self.formulas)
+        selected = tuple(tuple(remainder) for remainder in selector(remainders))
+        if not selected:
+            raise ValueError("selection function must choose at least one remainder")
+        if any(remainder not in remainders for remainder in selected):
+            raise ValueError("selection function must choose only remainder sets")
+        kept = tuple(
+            formula
+            for formula in self.formulas
+            if all(formula in remainder for remainder in selected)
         )
         return BeliefBase(self.alphabet, kept)
 
