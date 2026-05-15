@@ -47,6 +47,18 @@ def test_hansson_1989_base_contraction_preserves_source_disjunction() -> None:
     assert closed_equivalent_base.simple_full_meet_contract((P,)).formulas == ()
 
 
+def test_hansson_1989_simple_partial_meet_intersects_selected_remainders() -> None:
+    """Hansson 1989, Definition 3.7: simple partial meet intersects gamma(A perp B)."""
+
+    base = BeliefBase(ALPHABET, (P, Q, disjunction(P, Q)))
+    remainders = base.remainder_sets((P,))
+    selected = (remainders[0],)
+
+    contracted = base.simple_partial_meet_contract((P,), lambda _: selected)
+
+    assert contracted.formulas == selected[0]
+
+
 @given(st_base_formulas, st_forbidden)
 @settings(deadline=None)
 def test_hansson_1989_remainder_sets_are_maximal_subsets_avoiding_inputs(
