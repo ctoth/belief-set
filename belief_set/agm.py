@@ -116,6 +116,37 @@ class SpohnEpistemicState:
             return math.inf
         return min(formula_ranks)
 
+    def conditionalize(
+        self,
+        formula: Formula,
+        *,
+        firmness: int | float,
+        max_alphabet_size: int = MAX_ALPHABET_SIZE,
+    ) -> SpohnEpistemicState:
+        """Return Spohn's finite A,alpha-conditionalization of this OCF."""
+        firmness_value = _checked_firmness(firmness)
+        signature = self.alphabet | formula.atoms()
+        enforce_alphabet_budget(signature, max_alphabet_size)
+        state = extend_state(self, signature)
+        worlds = BeliefSet.all_worlds(signature)
+        formula_worlds = frozenset(world for world in worlds if formula.evaluate(world))
+        counter_worlds = worlds - formula_worlds
+        if not formula_worlds or not counter_worlds:
+            raise ValueError("conditionalization formula must be satisfiable and non-tautological")
+        formula_rank = state.rank(formula, max_alphabet_size=max_alphabet_size)
+        counter_rank = state.rank(negate(formula), max_alphabet_size=max_alphabet_size)
+        if math.isinf(float(formula_rank)) or math.isinf(float(counter_rank)):
+            raise ValueError("conditionalization parts must have finite ranks")
+
+        ranks: dict[World, int | float] = {}
+        for world in worlds:
+            current_rank = state.ranks[world]
+            if formula.evaluate(world):
+                ranks[world] = current_rank - formula_rank
+            else:
+                ranks[world] = firmness_value + current_rank - counter_rank
+        return SpohnEpistemicState.from_ranks(signature, ranks)
+
 
 def revise(
     state: SpohnEpistemicState,
@@ -222,6 +253,17 @@ def _raise_for_invalid_ranks(ranks: Mapping[World, int | float]) -> None:
             raise ValueError("SpohnEpistemicState ranks must not be NaN")
         if rank_value < 0:
             raise ValueError("SpohnEpistemicState ranks must be non-negative")
+
+
+def _checked_firmness(firmness: int | float) -> int | float:
+    firmness_value = float(firmness)
+    if math.isnan(firmness_value):
+        raise ValueError("conditionalization firmness must not be NaN")
+    if firmness_value < 0:
+        raise ValueError("conditionalization firmness must be non-negative")
+    if firmness_value.is_integer():
+        return int(firmness_value)
+    return firmness_value
 
 
 def _all_ranks_infinite(state: SpohnEpistemicState) -> bool:
