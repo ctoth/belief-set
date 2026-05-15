@@ -233,6 +233,8 @@ best-scoring worlds as a belief set. `ICMergeOperator.SIGMA` sums distances.
 `ICMergeOperator.GMAX` compares sorted distance vectors lexicographically.
 `ICMergeOutcome.distance_vectors` exposes the per-profile distances used to
 compute those scores.
+`ICMergeOutcome.candidate_worlds` exposes the integrity-constraint models that
+were scored before selecting `winning_worlds`.
 Unsatisfiable profile members raise `ICMergeProfileMemberInconsistent`.
 
 ## Bounded Enumeration
