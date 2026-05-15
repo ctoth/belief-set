@@ -9,6 +9,7 @@ def test_package_imports() -> None:
         "BOTTOM",
         "TOP",
         "Atom",
+        "BeliefBase",
         "BeliefSet",
         "EnumerationExceeded",
         "EpistemicEntrenchment",
@@ -38,6 +39,7 @@ def test_package_imports() -> None:
 def test_package_exports_are_importable_from_root() -> None:
     from belief_set import (  # noqa: PLC0415
         AlphabetBudgetExceeded,
+        BeliefBase,
         EnumerationExceeded,
         EpistemicEntrenchment,
         ICMergeOperator,
@@ -47,6 +49,7 @@ def test_package_exports_are_importable_from_root() -> None:
     )
 
     assert AlphabetBudgetExceeded.__name__ == "AlphabetBudgetExceeded"
+    assert BeliefBase.__name__ == "BeliefBase"
     assert EnumerationExceeded.__name__ == "EnumerationExceeded"
     assert EpistemicEntrenchment.__name__ == "EpistemicEntrenchment"
     assert ICMergeOperator.SIGMA == "sigma"
