@@ -88,6 +88,48 @@ def test_spohn_1988_formula_rank_is_minimum_rank_of_formula_worlds(
     assert state.rank(formula) == expected
 
 
+@given(st_finite_ocf(), st_formula, st.integers(min_value=0, max_value=5))
+@settings(deadline=None)
+def test_spohn_1988_conditionalization_sets_formula_firmness(
+    state: SpohnEpistemicState,
+    formula: Formula,
+    firmness: int,
+) -> None:
+    """Spohn 1988, Definition 6: kappa_A,alpha(A)=0 and kappa_A,alpha(not A)=alpha."""
+
+    assume(_belief(formula).is_consistent)
+    assume(_belief(negate(formula)).is_consistent)
+
+    conditioned = state.conditionalize(formula, firmness=firmness)
+
+    assert conditioned.rank(formula) == 0
+    assert conditioned.rank(negate(formula)) == firmness
+
+
+@given(st_finite_ocf(), st_formula, st.integers(min_value=0, max_value=5))
+@settings(deadline=None)
+def test_spohn_1988_conditionalization_preserves_grading_inside_each_part(
+    state: SpohnEpistemicState,
+    formula: Formula,
+    firmness: int,
+) -> None:
+    """Spohn 1988, Definition 6: A- and not-A-parts are shifted, not reordered."""
+
+    assume(_belief(formula).is_consistent)
+    assume(_belief(negate(formula)).is_consistent)
+
+    conditioned = state.conditionalize(formula, firmness=firmness)
+    worlds = tuple(BeliefSet.all_worlds(ALPHABET))
+
+    for expected_truth in (True, False):
+        part_worlds = tuple(world for world in worlds if formula.evaluate(world) is expected_truth)
+        for left in part_worlds:
+            for right in part_worlds:
+                assert conditioned.ranks[left] - conditioned.ranks[right] == (
+                    state.ranks[left] - state.ranks[right]
+                )
+
+
 @given(st_profile(), st_formula)
 @settings(deadline=None)
 def test_konieczny_pino_perez_2002_gmax_refines_max(
