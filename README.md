@@ -161,6 +161,8 @@ theory. Both return `RevisionOutcome`.
 worlds selected by the ranking, matching the Grove-style revision target.
 `SpohnEpistemicState.is_believed(formula)` checks whether the formula belongs
 to the OCF's believed content.
+`SpohnEpistemicState.is_disbelieved(formula)` and `is_neutral(formula)` expose
+the other two Spohn firmness-sign attitudes.
 `SpohnEpistemicState.firmness(formula)` returns Spohn's signed firmness value
 for the formula against its negation.
 `SpohnEpistemicState.conditionalize(formula, firmness=n)` implements Spohn's
