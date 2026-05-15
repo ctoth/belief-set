@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from types import MappingProxyType
 
 from belief_set.anytime import enforce_alphabet_budget
-from belief_set.core import BeliefSet
+from belief_set.core import BeliefSet, expand
 from belief_set.language import Formula, World, negate
 
 
@@ -280,6 +280,27 @@ def full_meet_contract(
         belief_set=contracted,
         state=SpohnEpistemicState.from_ranks(signature, contracted_ranks),
         trace=revision_trace("contract", state.belief_set),
+    )
+
+
+def levi_revise(
+    state: SpohnEpistemicState,
+    formula: Formula,
+    *,
+    max_alphabet_size: int = MAX_ALPHABET_SIZE,
+) -> RevisionOutcome:
+    """AGM revision via Levi identity: contract not-formula, then expand."""
+    contracted = full_meet_contract(
+        state,
+        negate(formula),
+        max_alphabet_size=max_alphabet_size,
+    )
+    belief_set = expand(contracted.belief_set, formula)
+    revised_state = SpohnEpistemicState.from_belief_set(belief_set)
+    return RevisionOutcome(
+        belief_set=belief_set,
+        state=revised_state,
+        trace=revision_trace("levi_revise", state.belief_set),
     )
 
 

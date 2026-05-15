@@ -1,4 +1,11 @@
-from belief_set.agm import RevisionOutcome, RevisionTrace, SpohnEpistemicState, full_meet_contract, revise
+from belief_set.agm import (
+    RevisionOutcome,
+    RevisionTrace,
+    SpohnEpistemicState,
+    full_meet_contract,
+    levi_revise,
+    revise,
+)
 from belief_set.anytime import AlphabetBudgetExceeded, EnumerationExceeded
 from belief_set.core import BeliefSet, expand, theory_subset
 from belief_set.entrenchment import EpistemicEntrenchment
@@ -42,6 +49,7 @@ __all__ = [
     "equivalent",
     "expand",
     "full_meet_contract",
+    "levi_revise",
     "lexicographic_revise",
     "merge_belief_profile",
     "negate",
