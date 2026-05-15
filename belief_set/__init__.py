@@ -7,6 +7,7 @@ from belief_set.agm import (
     revise,
 )
 from belief_set.anytime import AlphabetBudgetExceeded, EnumerationExceeded
+from belief_set.base import BeliefBase
 from belief_set.core import BeliefSet, expand, theory_subset
 from belief_set.entrenchment import EpistemicEntrenchment
 from belief_set.ic_merge import (
@@ -33,6 +34,7 @@ __all__ = [
     "BOTTOM",
     "TOP",
     "Atom",
+    "BeliefBase",
     "BeliefSet",
     "EnumerationExceeded",
     "EpistemicEntrenchment",
