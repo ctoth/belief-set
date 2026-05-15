@@ -160,6 +160,8 @@ maximal subsets avoiding the forbidden inputs, and
 `simple_full_meet_contract(forbidden)` intersects those remainders. This keeps
 Hansson's `{a}` versus `{a, a or b}` distinction visible where closed theory
 representations collapse it.
+`simple_partial_meet_contract(forbidden, selector)` implements Definition 3.7
+by intersecting the selector's chosen remainder subfamily.
 
 ## Revision And Contraction
 
