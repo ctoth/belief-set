@@ -204,6 +204,24 @@ def test_spohn_1988_conditionalization_preserves_grading_inside_each_part(
                 )
 
 
+@given(st_finite_ocf(), st_formula, st_formula)
+@settings(deadline=None)
+def test_spohn_1988_conditional_rank_is_shifted_intersection_rank(
+    state: SpohnEpistemicState,
+    formula: Formula,
+    given: Formula,
+) -> None:
+    """Spohn 1988, Definition 5: kappa(B|A)=kappa(A and B)-kappa(A)."""
+
+    assume(_belief(given).is_consistent)
+    assume(state.rank(given) < math.inf)
+
+    intersection = conjunction(given, formula)
+    expected = state.rank(intersection) - state.rank(given)
+
+    assert state.conditional_rank(formula, given) == expected
+
+
 @given(st_profile(), st_formula)
 @settings(deadline=None)
 def test_konieczny_pino_perez_2002_gmax_refines_max(
