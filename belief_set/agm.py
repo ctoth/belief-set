@@ -135,6 +135,18 @@ class SpohnEpistemicState:
             if rank == best_rank and formula.evaluate(world)
         )
 
+    def firmness(
+        self,
+        formula: Formula,
+        *,
+        max_alphabet_size: int = MAX_ALPHABET_SIZE,
+    ) -> int | float:
+        """Return Spohn's signed firmness of belief for a formula."""
+        formula_rank = self.rank(formula, max_alphabet_size=max_alphabet_size)
+        if formula_rank == 0:
+            return self.rank(negate(formula), max_alphabet_size=max_alphabet_size)
+        return -formula_rank
+
     def conditionalize(
         self,
         formula: Formula,
