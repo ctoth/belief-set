@@ -49,6 +49,7 @@ outcome = revise(state, q)
 
 assert outcome.belief_set.entails(q)
 assert outcome.state.belief_set.equivalent(outcome.belief_set)
+assert outcome.state.rank(q) == 0
 assert outcome.trace.operator == "revise"
 ```
 
@@ -217,6 +218,7 @@ assert outcome.scored_worlds[0][1] == (0.0,)
 `merge_belief_profile()` evaluates candidate worlds satisfying the integrity
 constraint `mu`, scores them by distance to the profile, and returns the
 best-scoring worlds as a belief set. `ICMergeOperator.SIGMA` sums distances.
+`ICMergeOperator.MAX` minimizes the worst distance to any profile member.
 `ICMergeOperator.GMAX` compares sorted distance vectors lexicographically.
 Unsatisfiable profile members raise `ICMergeProfileMemberInconsistent`.
 
