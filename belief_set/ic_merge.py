@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from types import MappingProxyType
 from typing import overload
 
 from belief_set.agm import MAX_ALPHABET_SIZE
@@ -32,6 +34,7 @@ class ICMergeProfileMemberInconsistent(ValueError):
 class ICMergeOutcome:
     belief_set: BeliefSet
     scored_worlds: tuple[tuple[World, tuple[float, ...]], ...]
+    distance_vectors: Mapping[World, tuple[float, ...]]
 
     @property
     def best_score(self) -> tuple[float, ...] | None:
@@ -80,10 +83,18 @@ def merge_belief_profile(
         return ICMergeOutcome(
             belief_set=BeliefSet.contradiction(signature),
             scored_worlds=(),
+            distance_vectors=MappingProxyType({}),
         )
+    distance_vectors = {
+        world: _distance_vector(world, distance_entries)
+        for world in candidates
+    }
     scored = tuple(
         sorted(
-            ((world, _score_world(world, distance_entries, operator)) for world in candidates),
+            (
+                (world, _score_distances(distance_vectors[world], operator))
+                for world in candidates
+            ),
             key=lambda item: (_score_key(item[1]), tuple(sorted(item[0]))),
         )
     )
@@ -92,15 +103,21 @@ def merge_belief_profile(
     return ICMergeOutcome(
         belief_set=BeliefSet(signature, winners),
         scored_worlds=scored,
+        distance_vectors=MappingProxyType(distance_vectors),
     )
 
 
-def _score_world(
+def _distance_vector(
     world: World,
     distance_entries: tuple[_DistanceFormulaEntry, ...],
+) -> tuple[float, ...]:
+    return tuple(_distance_from_entry(world, entry) for entry in distance_entries)
+
+
+def _score_distances(
+    distances: tuple[float, ...],
     operator: ICMergeOperator,
 ) -> tuple[float, ...]:
-    distances = tuple(_distance_from_entry(world, entry) for entry in distance_entries)
     if operator == ICMergeOperator.SIGMA:
         return (float(sum(distances)),)
     if operator == ICMergeOperator.MAX:
