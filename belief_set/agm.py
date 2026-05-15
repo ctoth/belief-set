@@ -8,7 +8,7 @@ from types import MappingProxyType
 
 from belief_set.anytime import enforce_alphabet_budget
 from belief_set.core import BeliefSet, expand
-from belief_set.language import Formula, World, negate
+from belief_set.language import Formula, World, conjunction, negate
 
 
 MAX_ALPHABET_SIZE = 16
@@ -173,6 +173,26 @@ class SpohnEpistemicState:
     ) -> bool:
         """Return whether the OCF is neutral toward the formula."""
         return self.firmness(formula, max_alphabet_size=max_alphabet_size) == 0
+
+    def conditional_rank(
+        self,
+        formula: Formula,
+        given: Formula,
+        *,
+        max_alphabet_size: int = MAX_ALPHABET_SIZE,
+    ) -> int | float:
+        """Return Spohn's A-part rank kappa(formula | given)."""
+        signature = self.alphabet | formula.atoms() | given.atoms()
+        enforce_alphabet_budget(signature, max_alphabet_size)
+        state = extend_state(self, signature)
+        given_rank = state.rank(given, max_alphabet_size=max_alphabet_size)
+        if math.isinf(float(given_rank)):
+            raise ValueError("conditional rank given formula must have finite rank")
+        intersection_rank = state.rank(
+            conjunction(given, formula),
+            max_alphabet_size=max_alphabet_size,
+        )
+        return intersection_rank - given_rank
 
     def conditionalize(
         self,
