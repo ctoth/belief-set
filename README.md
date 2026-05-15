@@ -157,6 +157,8 @@ assert contraction.belief_set.alphabet == contraction.state.alphabet
 `revise()` implements Darwiche-Pearl bullet revision over a finite Spohn
 ranking. `full_meet_contract()` uses the Harper identity over the finite
 theory. Both return `RevisionOutcome`.
+`SpohnEpistemicState.minimal_worlds(formula)` returns the closest formula
+worlds selected by the ranking, matching the Grove-style revision target.
 `SpohnEpistemicState.conditionalize(formula, firmness=n)` implements Spohn's
 finite A,n-conditionalization, preserving the internal ranks of the formula and
 counterformula parts while setting the counterformula rank to `n`.
