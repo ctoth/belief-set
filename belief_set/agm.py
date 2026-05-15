@@ -147,6 +147,15 @@ class SpohnEpistemicState:
             return self.rank(negate(formula), max_alphabet_size=max_alphabet_size)
         return -formula_rank
 
+    def is_believed(
+        self,
+        formula: Formula,
+        *,
+        max_alphabet_size: int = MAX_ALPHABET_SIZE,
+    ) -> bool:
+        """Return whether the formula is in the OCF's believed content."""
+        return self.rank(negate(formula), max_alphabet_size=max_alphabet_size) > 0
+
     def conditionalize(
         self,
         formula: Formula,
