@@ -49,6 +49,7 @@ def test_package_exports_are_importable_from_root() -> None:
     assert EnumerationExceeded.__name__ == "EnumerationExceeded"
     assert EpistemicEntrenchment.__name__ == "EpistemicEntrenchment"
     assert ICMergeOperator.SIGMA == "sigma"
+    assert ICMergeOperator.MAX == "max"
     assert ICMergeOutcome.__name__ == "ICMergeOutcome"
     assert ICMergeProfileMemberInconsistent.__name__ == "ICMergeProfileMemberInconsistent"
     assert callable(merge_belief_profile)
