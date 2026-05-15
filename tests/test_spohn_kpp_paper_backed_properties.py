@@ -110,6 +110,25 @@ def test_grove_1988_revision_selects_minimal_formula_worlds(
     assert state.minimal_worlds(formula) == expected
 
 
+@given(st_finite_ocf(), st_formula)
+@settings(deadline=None)
+def test_spohn_1988_firmness_is_signed_rank_of_formula_or_counterformula(
+    state: SpohnEpistemicState,
+    formula: Formula,
+) -> None:
+    """Spohn 1988: firmness is kappa(not A) if A is believed, else -kappa(A)."""
+
+    assume(_belief(formula).is_consistent)
+    assume(_belief(negate(formula)).is_consistent)
+
+    if state.rank(formula) == 0:
+        expected = state.rank(negate(formula))
+    else:
+        expected = -state.rank(formula)
+
+    assert state.firmness(formula) == expected
+
+
 @given(st_finite_ocf(), st_formula, st.integers(min_value=0, max_value=5))
 @settings(deadline=None)
 def test_spohn_1988_conditionalization_sets_formula_firmness(
