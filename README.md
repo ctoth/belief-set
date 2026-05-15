@@ -167,6 +167,8 @@ to the OCF's believed content.
 the other two Spohn firmness-sign attitudes.
 `SpohnEpistemicState.firmness(formula)` returns Spohn's signed firmness value
 for the formula against its negation.
+`SpohnEpistemicState.conditional_rank(formula, given)` returns Spohn's
+Definition 5 shifted `given`-part rank for `formula`.
 `SpohnEpistemicState.conditionalize(formula, firmness=n)` implements Spohn's
 finite A,n-conditionalization, preserving the internal ranks of the formula and
 counterformula parts while setting the counterformula rank to `n`.
