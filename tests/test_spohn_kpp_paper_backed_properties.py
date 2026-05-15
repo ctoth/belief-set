@@ -91,6 +91,25 @@ def test_spohn_1988_formula_rank_is_minimum_rank_of_formula_worlds(
     assert state.rank(formula) == expected
 
 
+@given(st_finite_ocf(), st_formula)
+@settings(deadline=None)
+def test_grove_1988_revision_selects_minimal_formula_worlds(
+    state: SpohnEpistemicState,
+    formula: Formula,
+) -> None:
+    """Grove 1988: revision selects the closest worlds satisfying the input."""
+
+    assume(_belief(formula).is_consistent)
+    best_rank = state.rank(formula)
+    expected = frozenset(
+        world
+        for world in BeliefSet.all_worlds(ALPHABET)
+        if formula.evaluate(world) and state.ranks[world] == best_rank
+    )
+
+    assert state.minimal_worlds(formula) == expected
+
+
 @given(st_finite_ocf(), st_formula, st.integers(min_value=0, max_value=5))
 @settings(deadline=None)
 def test_spohn_1988_conditionalization_sets_formula_firmness(
