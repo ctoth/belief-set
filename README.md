@@ -156,7 +156,9 @@ assert contraction.belief_set.alphabet == contraction.state.alphabet
 
 `revise()` implements Darwiche-Pearl bullet revision over a finite Spohn
 ranking. `full_meet_contract()` uses the Harper identity over the finite
-theory. Both return `RevisionOutcome`.
+theory. `levi_revise()` exposes the AGM Levi construction by contracting the
+input negation, then expanding by the input. These operators return
+`RevisionOutcome`.
 `SpohnEpistemicState.minimal_worlds(formula)` returns the closest formula
 worlds selected by the ranking, matching the Grove-style revision target.
 `SpohnEpistemicState.is_believed(formula)` checks whether the formula belongs
