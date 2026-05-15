@@ -33,6 +33,21 @@ class ICMergeOutcome:
     belief_set: BeliefSet
     scored_worlds: tuple[tuple[World, tuple[float, ...]], ...]
 
+    @property
+    def best_score(self) -> tuple[float, ...] | None:
+        if not self.scored_worlds:
+            return None
+        return self.scored_worlds[0][1]
+
+    @property
+    def winning_worlds(self) -> frozenset[World]:
+        best_score = self.best_score
+        if best_score is None:
+            return frozenset()
+        return frozenset(
+            world for world, score in self.scored_worlds if score == best_score
+        )
+
 
 @dataclass(slots=True)
 class _DistanceFormulaEntry:
