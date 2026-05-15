@@ -129,6 +129,18 @@ def test_spohn_1988_firmness_is_signed_rank_of_formula_or_counterformula(
     assert state.firmness(formula) == expected
 
 
+@given(st_finite_ocf(), st_formula)
+@settings(deadline=None)
+def test_spohn_1988_belief_membership_is_positive_counterformula_rank(
+    state: SpohnEpistemicState,
+    formula: Formula,
+) -> None:
+    """Spohn 1988: A is believed in kappa iff kappa(not A) is positive."""
+
+    assert state.is_believed(formula) == (state.rank(negate(formula)) > 0)
+    assert state.is_believed(formula) == state.belief_set.entails(formula)
+
+
 @given(st_finite_ocf(), st_formula, st.integers(min_value=0, max_value=5))
 @settings(deadline=None)
 def test_spohn_1988_conditionalization_sets_formula_firmness(
