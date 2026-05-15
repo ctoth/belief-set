@@ -99,6 +99,23 @@ class SpohnEpistemicState:
             frozenset(world for world, rank in self.ranks.items() if rank == min_rank),
         )
 
+    def rank(
+        self,
+        formula: Formula,
+        *,
+        max_alphabet_size: int = MAX_ALPHABET_SIZE,
+    ) -> int | float:
+        """Return Spohn's proposition rank: the minimum rank of its worlds."""
+        signature = self.alphabet | formula.atoms()
+        enforce_alphabet_budget(signature, max_alphabet_size)
+        state = extend_state(self, signature)
+        formula_ranks = tuple(
+            rank for world, rank in state.ranks.items() if formula.evaluate(world)
+        )
+        if not formula_ranks:
+            return math.inf
+        return min(formula_ranks)
+
 
 def revise(
     state: SpohnEpistemicState,
