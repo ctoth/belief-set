@@ -256,6 +256,24 @@ def test_konieczny_pino_perez_2002_outcome_exposes_selected_minimal_worlds(
 
 @given(st_profile(), st_formula, st_merge_operator)
 @settings(deadline=None)
+def test_konieczny_pino_perez_2002_outcome_exposes_integrity_constraint_models(
+    profile: tuple[Formula, ...],
+    mu: Formula,
+    operator: ICMergeOperator,
+) -> None:
+    """KPP 2002: Delta_mu(Psi) minimizes over mod(mu)."""
+
+    assume(_belief(mu).is_consistent)
+    assume(all(_belief(formula).is_consistent for formula in profile))
+
+    outcome = merge_belief_profile(ALPHABET, profile, mu, operator=operator)
+
+    assert outcome.candidate_worlds == _belief(mu).models
+    assert outcome.winning_worlds <= outcome.candidate_worlds
+
+
+@given(st_profile(), st_formula, st_merge_operator)
+@settings(deadline=None)
 def test_konieczny_pino_perez_2002_outcome_exposes_profile_distance_vectors(
     profile: tuple[Formula, ...],
     mu: Formula,
