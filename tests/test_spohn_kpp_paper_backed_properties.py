@@ -46,6 +46,9 @@ FORMULAS: tuple[Formula, ...] = (
 )
 
 st_formula = st.sampled_from(FORMULAS)
+st_merge_operator = st.sampled_from(
+    (ICMergeOperator.SIGMA, ICMergeOperator.MAX, ICMergeOperator.GMAX)
+)
 
 
 @st.composite
@@ -155,3 +158,26 @@ def test_konieczny_pino_perez_2002_gmax_refines_max(
     ).belief_set
 
     assert gmax_result.models <= max_result.models
+
+
+@given(st_profile(), st_formula, st_merge_operator)
+@settings(deadline=None)
+def test_konieczny_pino_perez_2002_outcome_exposes_selected_minimal_worlds(
+    profile: tuple[Formula, ...],
+    mu: Formula,
+    operator: ICMergeOperator,
+) -> None:
+    """KPP 2002: merge result is min(mod(mu), <=_Psi)."""
+
+    assume(_belief(mu).is_consistent)
+    assume(all(_belief(formula).is_consistent for formula in profile))
+
+    outcome = merge_belief_profile(ALPHABET, profile, mu, operator=operator)
+    expected_score = outcome.scored_worlds[0][1]
+    expected_winners = frozenset(
+        world for world, score in outcome.scored_worlds if score == expected_score
+    )
+
+    assert outcome.best_score == expected_score
+    assert outcome.winning_worlds == expected_winners
+    assert outcome.belief_set.models == outcome.winning_worlds
