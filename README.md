@@ -231,6 +231,8 @@ constraint `mu`, scores them by distance to the profile, and returns the
 best-scoring worlds as a belief set. `ICMergeOperator.SIGMA` sums distances.
 `ICMergeOperator.MAX` minimizes the worst distance to any profile member.
 `ICMergeOperator.GMAX` compares sorted distance vectors lexicographically.
+`ICMergeOutcome.distance_vectors` exposes the per-profile distances used to
+compute those scores.
 Unsatisfiable profile members raise `ICMergeProfileMemberInconsistent`.
 
 ## Bounded Enumeration
