@@ -116,6 +116,25 @@ class SpohnEpistemicState:
             return math.inf
         return min(formula_ranks)
 
+    def minimal_worlds(
+        self,
+        formula: Formula,
+        *,
+        max_alphabet_size: int = MAX_ALPHABET_SIZE,
+    ) -> frozenset[World]:
+        """Return the minimal formula-worlds selected by the ranking."""
+        signature = self.alphabet | formula.atoms()
+        enforce_alphabet_budget(signature, max_alphabet_size)
+        state = extend_state(self, signature)
+        best_rank = state.rank(formula, max_alphabet_size=max_alphabet_size)
+        if math.isinf(float(best_rank)):
+            return frozenset()
+        return frozenset(
+            world
+            for world, rank in state.ranks.items()
+            if rank == best_rank and formula.evaluate(world)
+        )
+
     def conditionalize(
         self,
         formula: Formula,
