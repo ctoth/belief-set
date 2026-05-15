@@ -141,6 +141,26 @@ def test_spohn_1988_belief_membership_is_positive_counterformula_rank(
     assert state.is_believed(formula) == state.belief_set.entails(formula)
 
 
+@given(st_finite_ocf(), st_formula)
+@settings(deadline=None)
+def test_spohn_1988_belief_attitudes_follow_firmness_sign(
+    state: SpohnEpistemicState,
+    formula: Formula,
+) -> None:
+    """Spohn 1988: positive, negative, and zero firmness define belief attitudes."""
+
+    firmness = state.firmness(formula)
+
+    assert state.is_believed(formula) == (firmness > 0)
+    assert state.is_disbelieved(formula) == (firmness < 0)
+    assert state.is_neutral(formula) == (firmness == 0)
+    assert sum((
+        state.is_believed(formula),
+        state.is_disbelieved(formula),
+        state.is_neutral(formula),
+    )) == 1
+
+
 @given(st_finite_ocf(), st_formula, st.integers(min_value=0, max_value=5))
 @settings(deadline=None)
 def test_spohn_1988_conditionalization_sets_formula_firmness(
