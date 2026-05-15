@@ -79,6 +79,7 @@ from belief_set import (
     AlphabetBudgetExceeded,
     Atom,
     BOTTOM,
+    BeliefBase,
     BeliefSet,
     EnumerationExceeded,
     EpistemicEntrenchment,
@@ -111,6 +112,7 @@ Module map:
   connectives, and equivalence checks.
 - `belief_set.core`: extensional finite belief sets and model-alignment
   helpers.
+- `belief_set.base`: Hansson-style finite belief bases and base contraction.
 - `belief_set.agm`: Spohn epistemic states, AGM-style revision, full-meet
   contraction, and revision traces.
 - `belief_set.iterated`: lexicographic and restrained iterated revision.
@@ -137,6 +139,27 @@ assert theory_subset(beliefs, weaker)
 `BeliefSet.from_formula()` automatically extends the declared alphabet with
 any atoms mentioned by the formula. `with_alphabet()` extends an existing
 belief set to a larger signature while preserving its old constraints.
+
+## Belief Bases
+
+```python
+from belief_set import Atom, BeliefBase, disjunction
+
+p = Atom("p")
+q = Atom("q")
+base = BeliefBase(frozenset({"p", "q"}), (p, disjunction(p, q)))
+
+contracted = base.simple_full_meet_contract((p,))
+
+assert contracted.formulas == (disjunction(p, q),)
+```
+
+`BeliefBase` keeps explicit source formulas separate from their extensional
+closure. `remainder_sets(forbidden)` implements Hansson's Definition 3.4
+maximal subsets avoiding the forbidden inputs, and
+`simple_full_meet_contract(forbidden)` intersects those remainders. This keeps
+Hansson's `{a}` versus `{a, a or b}` distinction visible where closed theory
+representations collapse it.
 
 ## Revision And Contraction
 
