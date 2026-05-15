@@ -19,6 +19,7 @@ from belief_set import (
     merge_belief_profile,
     negate,
 )
+from belief_set.ic_merge import _distance_to_formula
 
 
 pytestmark = pytest.mark.property
@@ -251,3 +252,27 @@ def test_konieczny_pino_perez_2002_outcome_exposes_selected_minimal_worlds(
     assert outcome.best_score == expected_score
     assert outcome.winning_worlds == expected_winners
     assert outcome.belief_set.models == outcome.winning_worlds
+
+
+@given(st_profile(), st_formula, st_merge_operator)
+@settings(deadline=None)
+def test_konieczny_pino_perez_2002_outcome_exposes_profile_distance_vectors(
+    profile: tuple[Formula, ...],
+    mu: Formula,
+    operator: ICMergeOperator,
+) -> None:
+    """KPP 2002: scores are aggregated from d(I, phi_j) over the profile."""
+
+    assume(_belief(mu).is_consistent)
+    assume(all(_belief(formula).is_consistent for formula in profile))
+
+    outcome = merge_belief_profile(ALPHABET, profile, mu, operator=operator)
+    for world, score in outcome.scored_worlds:
+        distances = tuple(_distance_to_formula(world, formula, ALPHABET) for formula in profile)
+        assert outcome.distance_vectors[world] == distances
+        if operator == ICMergeOperator.SIGMA:
+            assert score == (float(sum(distances)),)
+        elif operator == ICMergeOperator.MAX:
+            assert score == (float(max(distances, default=0.0)),)
+        else:
+            assert score == tuple(sorted(distances, reverse=True))
