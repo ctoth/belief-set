@@ -13,6 +13,7 @@ from belief_set.language import Formula, World
 
 class ICMergeOperator(StrEnum):
     SIGMA = "sigma"
+    MAX = "max"
     GMAX = "gmax"
 
 
@@ -87,6 +88,8 @@ def _score_world(
     distances = tuple(_distance_from_entry(world, entry) for entry in distance_entries)
     if operator == ICMergeOperator.SIGMA:
         return (float(sum(distances)),)
+    if operator == ICMergeOperator.MAX:
+        return (float(max(distances, default=0.0)),)
     if operator == ICMergeOperator.GMAX:
         return tuple(sorted(distances, reverse=True))
     raise ValueError(f"Unsupported IC merge operator: {operator}")
