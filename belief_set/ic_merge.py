@@ -51,6 +51,10 @@ class ICMergeOutcome:
             world for world, score in self.scored_worlds if score == best_score
         )
 
+    @property
+    def candidate_worlds(self) -> frozenset[World]:
+        return frozenset(world for world, _score in self.scored_worlds)
+
 
 @dataclass(slots=True)
 class _DistanceFormulaEntry:
