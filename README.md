@@ -159,6 +159,8 @@ ranking. `full_meet_contract()` uses the Harper identity over the finite
 theory. Both return `RevisionOutcome`.
 `SpohnEpistemicState.minimal_worlds(formula)` returns the closest formula
 worlds selected by the ranking, matching the Grove-style revision target.
+`SpohnEpistemicState.firmness(formula)` returns Spohn's signed firmness value
+for the formula against its negation.
 `SpohnEpistemicState.conditionalize(formula, firmness=n)` implements Spohn's
 finite A,n-conditionalization, preserving the internal ranks of the formula and
 counterformula parts while setting the counterformula rank to `n`.
