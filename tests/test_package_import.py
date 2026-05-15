@@ -25,6 +25,7 @@ def test_package_imports() -> None:
         "equivalent",
         "expand",
         "full_meet_contract",
+        "levi_revise",
         "lexicographic_revise",
         "merge_belief_profile",
         "negate",
