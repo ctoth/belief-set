@@ -46,7 +46,10 @@ FORMULAS: tuple[Formula, ...] = (
 )
 
 st_formula = st.sampled_from(FORMULAS)
-st_operator = st.sampled_from((ICMergeOperator.SIGMA, ICMergeOperator.GMAX))
+st_quasi_operator = st.sampled_from(
+    (ICMergeOperator.SIGMA, ICMergeOperator.MAX, ICMergeOperator.GMAX)
+)
+st_ic_operator = st.sampled_from((ICMergeOperator.SIGMA, ICMergeOperator.GMAX))
 
 
 @st.composite
@@ -122,7 +125,7 @@ def test_gardenfors_makinson_1988_epistemic_entrenchment_ee1_ee5(
 
 
 @pytest.mark.property
-@given(st_profile(), st_formula, st_operator)
+@given(st_profile(), st_formula, st_quasi_operator)
 @settings(deadline=None)
 def test_konieczny_pino_perez_2002_ic0_ic3_and_ic7_ic8(
     profile: tuple[Formula, ...],
@@ -155,7 +158,7 @@ def test_konieczny_pino_perez_2002_ic0_ic3_and_ic7_ic8(
 
 
 @pytest.mark.property
-@given(st_profile(), st_profile(), st_formula, st_operator)
+@given(st_profile(), st_profile(), st_formula, st_ic_operator)
 @settings(deadline=None)
 def test_konieczny_pino_perez_2002_ic5_ic6_profile_decomposition(
     left: tuple[Formula, ...],
