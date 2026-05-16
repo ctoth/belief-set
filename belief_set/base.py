@@ -68,6 +68,19 @@ class BeliefBase:
         )
         return BeliefBase(self.alphabet, kept)
 
+    def parallel_sets(
+        self,
+        forbidden: Iterable[Formula],
+    ) -> tuple[tuple[Formula, ...], ...]:
+        """Return Hansson's composite family A parallel B."""
+        forbidden_formulas = _dedupe_formulas(tuple(forbidden))
+        parallel: list[tuple[Formula, ...]] = []
+        for subset in _subsets(forbidden_formulas):
+            for remainder in self.remainder_sets(subset):
+                if remainder not in parallel:
+                    parallel.append(remainder)
+        return tuple(parallel)
+
     def simple_partial_meet_contract(
         self,
         forbidden: Iterable[Formula],
