@@ -103,7 +103,15 @@ def conjunction(*formulas: Formula) -> Formula:
         if isinstance(formula, Top):
             continue
         if isinstance(formula, And):
-            flattened.extend(formula.formulas)
+            nested = conjunction(*formula.formulas)
+            if isinstance(nested, Bottom):
+                return BOTTOM
+            if isinstance(nested, Top):
+                continue
+            if isinstance(nested, And):
+                flattened.extend(nested.formulas)
+                continue
+            flattened.append(nested)
             continue
         flattened.append(formula)
     if not flattened:
@@ -121,7 +129,15 @@ def disjunction(*formulas: Formula) -> Formula:
         if isinstance(formula, Bottom):
             continue
         if isinstance(formula, Or):
-            flattened.extend(formula.formulas)
+            nested = disjunction(*formula.formulas)
+            if isinstance(nested, Top):
+                return TOP
+            if isinstance(nested, Bottom):
+                continue
+            if isinstance(nested, Or):
+                flattened.extend(nested.formulas)
+                continue
+            flattened.append(nested)
             continue
         flattened.append(formula)
     if not flattened:
