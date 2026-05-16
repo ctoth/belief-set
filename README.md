@@ -180,10 +180,11 @@ assert contraction.belief_set.alphabet == contraction.state.alphabet
 ```
 
 `revise()` implements Darwiche-Pearl bullet revision over a finite Spohn
-ranking. `full_meet_contract()` uses the Harper identity over the finite
-theory. `levi_revise()` exposes the AGM Levi construction by contracting the
-input negation, then expanding by the input. These operators return
-`RevisionOutcome`.
+ranking. Its optional `firmness` parameter controls the finite Spohn strength
+added to non-input worlds, defaulting to `1`. `full_meet_contract()` uses the
+Harper identity over the finite theory. `levi_revise()` exposes the AGM Levi
+construction by contracting the input negation, then expanding by the input.
+These operators return `RevisionOutcome`.
 `SpohnEpistemicState.minimal_worlds(formula)` returns the closest formula
 worlds selected by the ranking, matching the Grove-style revision target.
 `SpohnEpistemicState.is_believed(formula)` checks whether the formula belongs
@@ -264,6 +265,9 @@ best-scoring worlds as a belief set. `ICMergeOperator.SIGMA` sums distances.
 compute those scores.
 `ICMergeOutcome.candidate_worlds` exposes the integrity-constraint models that
 were scored before selecting `winning_worlds`.
+`max_candidates` bounds each profile-formula model scan and raises
+`EnumerationExceeded` if exact distances cannot be established within the
+budget.
 Unsatisfiable profile members raise `ICMergeProfileMemberInconsistent`.
 
 ## Bounded Enumeration
