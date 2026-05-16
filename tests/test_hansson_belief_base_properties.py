@@ -75,6 +75,16 @@ def test_hansson_1989_disjunction_expansion_rejects_non_positive_size() -> None:
         base.disjunction_expansion(0)
 
 
+def test_hansson_1989_full_minimal_contract_keeps_unentailed_recurrence_candidate() -> None:
+    """Hansson 1989, p.125: E_{n+1} keeps D_{n+1} candidates not in Cn(E_n)."""
+
+    base = BeliefBase(ALPHABET, (P, Q))
+
+    contracted = base.full_minimal_contract((conjunction(P, Q),))
+
+    assert contracted.formulas == (disjunction(P, Q),)
+
+
 def test_hansson_1989_simple_partial_meet_intersects_selected_remainders() -> None:
     """Hansson 1989, Definition 3.7: simple partial meet intersects gamma(A perp B)."""
 
