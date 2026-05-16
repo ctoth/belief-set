@@ -77,11 +77,15 @@ class BeliefSet:
         if signature == self.alphabet:
             return self
         extras = tuple(sorted(signature - self.alphabet))
-        expanded_models: set[World] = set()
-        for model in self.models:
-            for extension in self.all_worlds(frozenset(extras)):
-                expanded_models.add(frozenset(set(model) | set(extension)))
-        return BeliefSet(signature, frozenset(expanded_models))
+        extension_worlds = self.all_worlds(frozenset(extras))
+        return BeliefSet(
+            signature,
+            frozenset(
+                model.union(extension)
+                for model in self.models
+                for extension in extension_worlds
+            ),
+        )
 
     def intersection_theory(self, other: BeliefSet) -> BeliefSet:
         """Return the theory intersection, represented by union of model sets."""
