@@ -81,6 +81,27 @@ class BeliefBase:
                     parallel.append(remainder)
         return tuple(parallel)
 
+    def is_covering_selection(
+        self,
+        forbidden: Iterable[Formula],
+        selected: Iterable[tuple[Formula, ...]],
+    ) -> bool:
+        """Return whether selected members of A parallel B are B-covering."""
+        forbidden_formulas = _dedupe_formulas(tuple(forbidden))
+        selected_members = tuple(tuple(member) for member in selected)
+        parallel = self.parallel_sets(forbidden_formulas)
+        if any(member not in parallel for member in selected_members):
+            raise ValueError("selection must choose only members of A parallel B")
+
+        for formula in forbidden_formulas:
+            if not any(
+                formula in subset
+                and any(remainder in selected_members for remainder in self.remainder_sets(subset))
+                for subset in _subsets(forbidden_formulas)
+            ):
+                return False
+        return True
+
     def simple_partial_meet_contract(
         self,
         forbidden: Iterable[Formula],
