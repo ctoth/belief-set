@@ -167,6 +167,13 @@ by intersecting the selector's chosen remainder subfamily.
 condition. `composite_partial_meet_contract(forbidden, selector)` implements
 Definition 3.9 by intersecting a selected covering subfamily of `A || B` when
 covering is possible.
+`disjunction_expansion(max_size)` builds Hansson's `V_n A` finite disjunction
+expansion. `full_minimal_contract(forbidden)` and
+`partial_minimal_contract(forbidden, selector)` implement the full and partial
+minimal-contraction recurrences over that expansion. These minimal operators
+can introduce useful disjunctions not literally present in the source base,
+while preserving logical inclusion in the original base and avoiding the
+contracted input.
 
 ## Revision And Contraction
 
