@@ -162,6 +162,11 @@ Hansson's `{a}` versus `{a, a or b}` distinction visible where closed theory
 representations collapse it.
 `simple_partial_meet_contract(forbidden, selector)` implements Definition 3.7
 by intersecting the selector's chosen remainder subfamily.
+`parallel_sets(forbidden)` builds Hansson's Definition 3.8 `A || B` family;
+`is_covering_selection(forbidden, selected)` checks the required `B`-covering
+condition. `composite_partial_meet_contract(forbidden, selector)` implements
+Definition 3.9 by intersecting a selected covering subfamily of `A || B` when
+covering is possible.
 
 ## Revision And Contraction
 
