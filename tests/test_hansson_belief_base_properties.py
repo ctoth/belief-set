@@ -100,6 +100,30 @@ def test_hansson_1989_covering_selection_rejects_non_parallel_members() -> None:
         base.is_covering_selection((P, Q), ((P, Q),))
 
 
+def test_hansson_1989_composite_partial_meet_intersects_covering_selection() -> None:
+    """Hansson 1989, Definition 3.9: composite partial meet intersects gamma(A || B)."""
+
+    base = BeliefBase(ALPHABET, (P, Q, disjunction(P, Q)))
+    covers_p = base.remainder_sets((P,))[0]
+    covers_q = base.remainder_sets((Q,))[0]
+    selected = (covers_p, covers_q)
+
+    contracted = base.composite_partial_meet_contract((P, Q), lambda _: selected)
+
+    assert contracted.formulas == (disjunction(P, Q),)
+    with pytest.raises(ValueError, match="remainder"):
+        base.simple_partial_meet_contract((P, Q), lambda _: selected)
+
+
+def test_hansson_1989_composite_partial_meet_requires_covering_when_possible() -> None:
+    """Hansson 1989, Definition 3.9: gamma must select a B-covering subfamily when possible."""
+
+    base = BeliefBase(ALPHABET, (P, Q, disjunction(P, Q)))
+
+    with pytest.raises(ValueError, match="covering"):
+        base.composite_partial_meet_contract((P, Q), lambda _: (base.formulas,))
+
+
 @given(st_base_formulas, st_forbidden)
 @settings(deadline=None)
 def test_hansson_1989_remainder_sets_are_maximal_subsets_avoiding_inputs(
