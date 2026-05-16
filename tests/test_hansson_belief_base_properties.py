@@ -4,7 +4,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from belief_set import Atom, Formula, conjunction, disjunction, negate
+from belief_set import Atom, Formula, conjunction, disjunction, negate, theory_subset
 from belief_set.base import BeliefBase
 
 
@@ -111,6 +111,30 @@ def test_hansson_1989_partial_minimal_contract_uses_selected_level_remainders() 
     )
 
     assert contracted.formulas == (P,)
+
+
+def test_hansson_1989_full_minimal_contract_has_logical_not_ordinary_inclusion() -> None:
+    """Hansson 1989, p.126: minimal contraction has logical inclusion, not ordinary inclusion."""
+
+    base = BeliefBase(ALPHABET, (P, Q))
+    contracted = base.full_minimal_contract((conjunction(P, Q),))
+
+    assert theory_subset(contracted.closure(), base.closure())
+    assert any(formula not in base.formulas for formula in contracted.formulas)
+    assert not contracted.entails(conjunction(P, Q))
+
+
+def test_hansson_1989_partial_minimal_contract_has_logical_inclusion_and_success() -> None:
+    """Hansson 1989, p.126: partial minimal contraction avoids the contracted input."""
+
+    base = BeliefBase(ALPHABET, (P, Q))
+    contracted = base.partial_minimal_contract(
+        (conjunction(P, Q),),
+        lambda remainders: (remainders[0],),
+    )
+
+    assert theory_subset(contracted.closure(), base.closure())
+    assert not contracted.entails(conjunction(P, Q))
 
 
 def test_hansson_1989_simple_partial_meet_intersects_selected_remainders() -> None:
