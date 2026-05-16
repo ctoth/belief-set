@@ -100,6 +100,19 @@ def test_hansson_1989_full_minimal_contract_keeps_pairwise_disjunctions() -> Non
     assert not contracted.entails(conjunction(P, Q, R))
 
 
+def test_hansson_1989_partial_minimal_contract_uses_selected_level_remainders() -> None:
+    """Hansson 1989, p.126: partial minimal contraction uses D_n = (V_n A) ~_gamma B."""
+
+    base = BeliefBase(ALPHABET, (P, Q))
+
+    contracted = base.partial_minimal_contract(
+        (conjunction(P, Q),),
+        lambda remainders: (remainders[0],),
+    )
+
+    assert contracted.formulas == (P,)
+
+
 def test_hansson_1989_simple_partial_meet_intersects_selected_remainders() -> None:
     """Hansson 1989, Definition 3.7: simple partial meet intersects gamma(A perp B)."""
 
