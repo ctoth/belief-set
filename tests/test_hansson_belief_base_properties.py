@@ -1,3 +1,5 @@
+from itertools import combinations
+
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -61,6 +63,24 @@ def test_hansson_1989_simple_partial_meet_intersects_selected_remainders() -> No
 
 @given(st_base_formulas, st_forbidden)
 @settings(deadline=None)
+def test_hansson_1989_parallel_sets_union_remainders_over_forbidden_subsets(
+    base_formulas: tuple[Formula, ...],
+    forbidden: tuple[Formula, ...],
+) -> None:
+    """Hansson 1989, Definition 3.8: A || B is union of A perp C for C subseteq B."""
+
+    base = BeliefBase(ALPHABET, base_formulas)
+    expected: list[tuple[Formula, ...]] = []
+    for subset in _subsets(forbidden):
+        for remainder in base.remainder_sets(subset):
+            if remainder not in expected:
+                expected.append(remainder)
+
+    assert base.parallel_sets(forbidden) == tuple(expected)
+
+
+@given(st_base_formulas, st_forbidden)
+@settings(deadline=None)
 def test_hansson_1989_remainder_sets_are_maximal_subsets_avoiding_inputs(
     base_formulas: tuple[Formula, ...],
     forbidden: tuple[Formula, ...],
@@ -77,3 +97,11 @@ def test_hansson_1989_remainder_sets_are_maximal_subsets_avoiding_inputs(
             if formula not in remainder:
                 expanded = BeliefBase(ALPHABET, (*remainder, formula))
                 assert any(expanded.entails(forbidden_formula) for forbidden_formula in forbidden)
+
+
+def _subsets(formulas: tuple[Formula, ...]) -> tuple[tuple[Formula, ...], ...]:
+    return tuple(
+        tuple(subset)
+        for size in range(len(formulas) + 1)
+        for subset in combinations(formulas, size)
+    )
