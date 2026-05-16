@@ -70,13 +70,20 @@ def merge_belief_profile(
     *,
     operator: ICMergeOperator = ICMergeOperator.SIGMA,
     max_alphabet_size: int = MAX_ALPHABET_SIZE,
+    max_candidates: int | None = None,
 ) -> ICMergeOutcome:
     """Konieczny-Pino Pérez style finite model-theoretic IC merge."""
+    if max_candidates is not None and max_candidates < 0:
+        raise ValueError("max_candidates must be non-negative")
     signature = frozenset(alphabet) | mu.atoms()
     for formula in profile:
         signature |= formula.atoms()
     enforce_alphabet_budget(signature, max_alphabet_size)
-    distance_entries = _distance_entries(profile, signature)
+    distance_entries = _distance_entries(
+        profile,
+        signature,
+        max_candidates=max_candidates,
+    )
     _raise_for_unsatisfiable_profile_members(distance_entries)
     candidates = tuple(
         world
@@ -207,11 +214,17 @@ def _distance_to_formula(
 def _distance_entries(
     profile: tuple[Formula, ...],
     signature: frozenset[str],
+    *,
+    max_candidates: int | None = None,
 ) -> tuple[_DistanceFormulaEntry, ...]:
     return tuple(
         _DistanceFormulaEntry(
             formula=formula,
-            models=_models_for_formula(formula, signature),
+            models=_models_for_formula(
+                formula,
+                signature,
+                max_candidates=max_candidates,
+            ),
             distances={},
         )
         for formula in profile
@@ -221,13 +234,22 @@ def _distance_entries(
 def _models_for_formula(
     formula: Formula,
     signature: frozenset[str],
+    *,
+    max_candidates: int | None = None,
 ) -> tuple[World, ...]:
     _raise_if_formula_atoms_outside_signature(formula, signature)
-    return tuple(
-        candidate
-        for candidate in BeliefSet.all_worlds(signature)
-        if formula.evaluate(candidate)
-    )
+    models: list[World] = []
+    examined = 0
+    for candidate in BeliefSet.all_worlds(signature):
+        if max_candidates is not None and examined >= max_candidates:
+            raise EnumerationExceeded(
+                partial_count=examined,
+                max_candidates=max_candidates,
+            )
+        examined += 1
+        if formula.evaluate(candidate):
+            models.append(candidate)
+    return tuple(models)
 
 
 def _distance_from_entry(world: World, entry: _DistanceFormulaEntry) -> float:
