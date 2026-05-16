@@ -167,6 +167,20 @@ class BeliefBase:
         )
         return BeliefBase(self.alphabet, kept)
 
+    def full_minimal_contract(
+        self,
+        forbidden: Iterable[Formula],
+    ) -> BeliefBase:
+        """Return Hansson's full minimal contraction over this finite base."""
+        forbidden_formulas = _dedupe_formulas(tuple(forbidden))
+        return _minimal_contract_recurrence(
+            self.alphabet,
+            len(self.formulas),
+            lambda size: self.disjunction_expansion(size).simple_full_meet_contract(
+                forbidden_formulas,
+            ),
+        )
+
 
 def _dedupe_formulas(formulas: tuple[Formula, ...]) -> tuple[Formula, ...]:
     deduped: list[Formula] = []
@@ -213,3 +227,22 @@ def _has_covering_selection(
         ):
             return False
     return True
+
+
+def _minimal_contract_recurrence(
+    alphabet: frozenset[str],
+    max_size: int,
+    level_contract: Callable[[int], BeliefBase],
+) -> BeliefBase:
+    kept: list[Formula] = []
+    for size in range(1, max_size + 1):
+        contracted = level_contract(size)
+        if size == 1:
+            kept.extend(contracted.formulas)
+            continue
+        current = BeliefBase(alphabet, tuple(kept))
+        for formula in contracted.formulas:
+            if not current.entails(formula):
+                kept.append(formula)
+                current = BeliefBase(alphabet, tuple(kept))
+    return BeliefBase(alphabet, tuple(kept))
