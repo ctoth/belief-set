@@ -1,5 +1,6 @@
 from itertools import combinations
 
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -77,6 +78,26 @@ def test_hansson_1989_parallel_sets_union_remainders_over_forbidden_subsets(
                 expected.append(remainder)
 
     assert base.parallel_sets(forbidden) == tuple(expected)
+
+
+def test_hansson_1989_covering_selection_meets_each_forbidden_input() -> None:
+    """Hansson 1989, Definition 3.8: D is B-covering only when every b in B is covered."""
+
+    base = BeliefBase(ALPHABET, (P, Q, disjunction(P, Q)))
+    covers_p = base.remainder_sets((P,))[0]
+    covers_q = base.remainder_sets((Q,))[0]
+
+    assert base.is_covering_selection((P, Q), (covers_p, covers_q))
+    assert not base.is_covering_selection((P, Q), (base.formulas,))
+
+
+def test_hansson_1989_covering_selection_rejects_non_parallel_members() -> None:
+    """Hansson 1989, Definition 3.8: D must be a subfamily of A || B."""
+
+    base = BeliefBase(ALPHABET, (P, Q, disjunction(P, Q)))
+
+    with pytest.raises(ValueError, match="parallel"):
+        base.is_covering_selection((P, Q), ((P, Q),))
 
 
 @given(st_base_formulas, st_forbidden)
