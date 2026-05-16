@@ -18,6 +18,7 @@ from belief_set import (
     disjunction,
     merge_belief_profile,
     negate,
+    revise,
 )
 from belief_set.ic_merge import _distance_to_formula
 
@@ -220,6 +221,25 @@ def test_spohn_1988_conditional_rank_is_shifted_intersection_rank(
     expected = state.rank(intersection) - state.rank(given)
 
     assert state.conditional_rank(formula, given) == expected
+
+
+@given(st_finite_ocf(), st_formula, st.integers(min_value=0, max_value=5))
+@settings(deadline=None)
+def test_spohn_1988_revision_accepts_configurable_firmness(
+    state: SpohnEpistemicState,
+    formula: Formula,
+    firmness: int,
+) -> None:
+    """Spohn 1988, Definition 6: finite acceptance strength is parameterized."""
+
+    assume(_belief(formula).is_consistent)
+    assume(_belief(negate(formula)).is_consistent)
+    assume(state.rank(negate(formula)) == 0)
+
+    revised = revise(state, formula, firmness=firmness).state
+
+    assert revised.rank(formula) == 0
+    assert revised.rank(negate(formula)) == firmness
 
 
 @given(st_profile(), st_formula)
