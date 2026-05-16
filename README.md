@@ -143,15 +143,18 @@ belief set to a larger signature while preserving its old constraints.
 ## Belief Bases
 
 ```python
-from belief_set import Atom, BeliefBase, disjunction
+from belief_set import Atom, BeliefBase, conjunction, disjunction
 
 p = Atom("p")
 q = Atom("q")
 base = BeliefBase(frozenset({"p", "q"}), (p, disjunction(p, q)))
+minimal_base = BeliefBase(frozenset({"p", "q"}), (p, q))
 
 contracted = base.simple_full_meet_contract((p,))
+minimal = minimal_base.full_minimal_contract((conjunction(p, q),))
 
 assert contracted.formulas == (disjunction(p, q),)
+assert minimal.formulas == (disjunction(p, q),)
 ```
 
 `BeliefBase` keeps explicit source formulas separate from their extensional
