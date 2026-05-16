@@ -5,7 +5,7 @@ from itertools import combinations
 from typing import Callable, Iterable
 
 from belief_set.core import BeliefSet
-from belief_set.language import Formula, conjunction
+from belief_set.language import Formula, conjunction, disjunction
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,6 +32,19 @@ class BeliefBase:
 
     def entails(self, formula: Formula) -> bool:
         return self.closure().entails(formula)
+
+    def disjunction_expansion(self, max_size: int) -> BeliefBase:
+        """Return Hansson's V_n A disjunction expansion for this finite base."""
+        if max_size < 1:
+            raise ValueError("disjunction expansion size must be positive")
+        expanded: list[Formula] = []
+        upper_size = min(max_size, len(self.formulas))
+        for size in range(1, upper_size + 1):
+            for subset in combinations(self.formulas, size):
+                formula = disjunction(*subset)
+                if formula not in expanded:
+                    expanded.append(formula)
+        return BeliefBase(self.alphabet, tuple(expanded))
 
     def remainder_sets(
         self,
