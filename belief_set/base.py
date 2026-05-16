@@ -181,6 +181,25 @@ class BeliefBase:
             ),
         )
 
+    def partial_minimal_contract(
+        self,
+        forbidden: Iterable[Formula],
+        selector: Callable[
+            [tuple[tuple[Formula, ...], ...]],
+            Iterable[tuple[Formula, ...]],
+        ],
+    ) -> BeliefBase:
+        """Return Hansson's partial minimal contraction over this finite base."""
+        forbidden_formulas = _dedupe_formulas(tuple(forbidden))
+        return _minimal_contract_recurrence(
+            self.alphabet,
+            len(self.formulas),
+            lambda size: self.disjunction_expansion(size).simple_partial_meet_contract(
+                forbidden_formulas,
+                selector,
+            ),
+        )
+
 
 def _dedupe_formulas(formulas: tuple[Formula, ...]) -> tuple[Formula, ...]:
     deduped: list[Formula] = []
