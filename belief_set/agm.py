@@ -230,9 +230,11 @@ def revise(
     state: SpohnEpistemicState,
     formula: Formula,
     *,
+    firmness: int | float = 1,
     max_alphabet_size: int = MAX_ALPHABET_SIZE,
 ) -> RevisionOutcome:
     """Darwiche-Pearl 1997 bullet revision over a Spohn ranking."""
+    firmness_value = _checked_firmness(firmness)
     signature = state.alphabet | formula.atoms()
     enforce_alphabet_budget(signature, max_alphabet_size)
     working_state = extend_state(state, signature)
@@ -261,7 +263,7 @@ def revise(
                 if formula.evaluate(world):
                     revised_ranks[world] = current_rank - min_formula_rank
                 else:
-                    revised_ranks[world] = current_rank + 1
+                    revised_ranks[world] = current_rank + firmness_value
             result_state = SpohnEpistemicState.from_ranks(signature, revised_ranks)
     return RevisionOutcome(
         belief_set=result_state.belief_set,
