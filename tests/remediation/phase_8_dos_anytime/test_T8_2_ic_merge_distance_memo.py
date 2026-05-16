@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import pytest
+
 from belief_set import TOP
+from belief_set.anytime import EnumerationExceeded
 from belief_set.core import BeliefSet
 from belief_set.ic_merge import merge_belief_profile
 from belief_set.language import World
@@ -32,3 +35,13 @@ def test_merge_distance_oracle_scans_each_profile_formula_once_per_call() -> Non
     merge_belief_profile(signature, (formula,), TOP)
 
     assert formula.evaluations == after_first_pass + len(worlds)
+
+
+def test_merge_profile_honors_candidate_budget_during_distance_entry_build() -> None:
+    signature = frozenset({"a", "b", "c"})
+    formula = CountingConjunctionFormula(signature)
+
+    with pytest.raises(EnumerationExceeded):
+        merge_belief_profile(signature, (formula,), TOP, max_candidates=0)
+
+    assert formula.evaluations == 0
