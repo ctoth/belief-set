@@ -85,6 +85,21 @@ def test_hansson_1989_full_minimal_contract_keeps_unentailed_recurrence_candidat
     assert contracted.formulas == (disjunction(P, Q),)
 
 
+def test_hansson_1989_full_minimal_contract_keeps_pairwise_disjunctions() -> None:
+    """Hansson 1989, p.126: full minimal contraction keeps useful pairwise disjunctions."""
+
+    base = BeliefBase(ALPHABET, (P, Q, R))
+
+    contracted = base.full_minimal_contract((conjunction(P, Q, R),))
+
+    assert contracted.formulas == (
+        disjunction(P, Q),
+        disjunction(P, R),
+        disjunction(Q, R),
+    )
+    assert not contracted.entails(conjunction(P, Q, R))
+
+
 def test_hansson_1989_simple_partial_meet_intersects_selected_remainders() -> None:
     """Hansson 1989, Definition 3.7: simple partial meet intersects gamma(A perp B)."""
 
