@@ -126,6 +126,34 @@ class BeliefBase:
         )
         return BeliefBase(self.alphabet, kept)
 
+    def composite_partial_meet_contract(
+        self,
+        forbidden: Iterable[Formula],
+        selector: Callable[
+            [tuple[tuple[Formula, ...], ...]],
+            Iterable[tuple[Formula, ...]],
+        ],
+    ) -> BeliefBase:
+        """Return Hansson's composite partial meet contraction via gamma."""
+        forbidden_formulas = _dedupe_formulas(tuple(forbidden))
+        parallel = self.parallel_sets(forbidden_formulas)
+        selected = tuple(tuple(member) for member in selector(parallel))
+        if not selected:
+            raise ValueError("selection function must choose at least one parallel set")
+        if any(member not in parallel for member in selected):
+            raise ValueError("selection function must choose only members of A parallel B")
+        if _has_covering_selection(self, forbidden_formulas) and not self.is_covering_selection(
+            forbidden_formulas,
+            selected,
+        ):
+            raise ValueError("selection function must choose a B-covering subfamily")
+        kept = tuple(
+            formula
+            for formula in self.formulas
+            if all(formula in member for member in selected)
+        )
+        return BeliefBase(self.alphabet, kept)
+
 
 def _dedupe_formulas(formulas: tuple[Formula, ...]) -> tuple[Formula, ...]:
     deduped: list[Formula] = []
@@ -159,3 +187,16 @@ def _proper_formula_subset(
     return all(formula in right for formula in left) and any(
         formula not in left for formula in right
     )
+
+
+def _has_covering_selection(
+    base: BeliefBase,
+    forbidden: tuple[Formula, ...],
+) -> bool:
+    for formula in forbidden:
+        if not any(
+            formula in subset and base.remainder_sets(subset)
+            for subset in _subsets(forbidden)
+        ):
+            return False
+    return True
