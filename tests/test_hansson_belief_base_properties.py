@@ -50,6 +50,31 @@ def test_hansson_1989_base_contraction_preserves_source_disjunction() -> None:
     assert closed_equivalent_base.simple_full_meet_contract((P,)).formulas == ()
 
 
+def test_hansson_1989_disjunction_expansion_contains_up_to_n_member_disjunctions() -> None:
+    """Hansson 1989, p.125: V_n A contains disjunctions of at most n base members."""
+
+    base = BeliefBase(ALPHABET, (P, Q, R))
+
+    assert base.disjunction_expansion(1).formulas == (P, Q, R)
+    assert base.disjunction_expansion(2).formulas == (
+        P,
+        Q,
+        R,
+        disjunction(P, Q),
+        disjunction(P, R),
+        disjunction(Q, R),
+    )
+
+
+def test_hansson_1989_disjunction_expansion_rejects_non_positive_size() -> None:
+    """Hansson 1989, p.125: V_n A is defined for n >= 1."""
+
+    base = BeliefBase(ALPHABET, (P, Q, R))
+
+    with pytest.raises(ValueError, match="positive"):
+        base.disjunction_expansion(0)
+
+
 def test_hansson_1989_simple_partial_meet_intersects_selected_remainders() -> None:
     """Hansson 1989, Definition 3.7: simple partial meet intersects gamma(A perp B)."""
 
